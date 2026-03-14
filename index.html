@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HSE Management System — Hayleys Fentons Ltd</title>
+<style>
+:root {
+  --primary: #0d1b2a; --sidebar-bg: #1b263b; --sidebar-hover: #415a77;
+  --accent: #e63946; --accent2: #f77f00; --success: #2a9d8f; --info: #457b9d;
+  --warning: #f4a261; --danger: #e63946; --light: #f1faee; --white: #ffffff;
+  --card-bg: #ffffff; --body-bg: #edf2f4; --text-dark: #1b263b; --text-muted: #6c757d;
+  --border: #dee2e6; --shadow: 0 2px 12px rgba(0,0,0,0.08); --radius: 10px;
+  --sidebar-width: 280px; --header-height: 60px; --transition: all 0.3s ease;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:var(--body-bg); color:var(--text-dark); overflow-x:hidden; }
+
+/* LOGIN */
+.login-screen { display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(135deg,var(--primary) 0%,var(--sidebar-bg) 50%,#415a77 100%); position:fixed; top:0; left:0; right:0; bottom:0; z-index:10000; }
+.login-box { background:var(--white); padding:50px 40px; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); width:420px; max-width:95%; text-align:center; }
+.login-box .logo-area { margin-bottom:30px; }
+.login-box .logo-area h1 { font-size:22px; color:var(--primary); margin-bottom:5px; }
+.login-box .logo-area p { color:var(--text-muted); font-size:13px; }
+.login-box .logo-icon { width:70px; height:70px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px; font-size:30px; color:white; }
+.login-box input { width:100%; padding:14px 18px; margin-bottom:15px; border:2px solid var(--border); border-radius:8px; font-size:14px; transition:var(--transition); }
+.login-box input:focus { border-color:var(--info); outline:none; box-shadow:0 0 0 3px rgba(69,123,157,0.15); }
+.login-box button { width:100%; padding:14px; background:linear-gradient(135deg,var(--primary),var(--sidebar-bg)); color:white; border:none; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; transition:var(--transition); }
+.login-box button:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(13,27,42,0.3); }
+.login-error { color:var(--danger); font-size:13px; margin-top:10px; display:none; }
+
+/* LAYOUT */
+.app-container { display:none; min-height:100vh; }
+.app-container.active { display:flex; }
+.sidebar { width:var(--sidebar-width); background:var(--sidebar-bg); color:var(--light); position:fixed; top:0; left:0; bottom:0; overflow-y:auto; z-index:1000; transition:var(--transition); }
+.sidebar-header { padding:20px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); background:var(--primary); }
+.sidebar-header h2 { font-size:16px; font-weight:700; color:var(--white); margin-bottom:3px; }
+.sidebar-header small { font-size:11px; color:rgba(255,255,255,0.6); }
+.sidebar-nav { padding:10px 0; }
+.nav-section-title { padding:12px 20px 6px; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:rgba(255,255,255,0.4); font-weight:700; }
+.nav-item { display:flex; align-items:center; padding:11px 20px; color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px; cursor:pointer; transition:var(--transition); border-left:3px solid transparent; }
+.nav-item:hover { background:var(--sidebar-hover); color:var(--white); border-left-color:var(--accent2); }
+.nav-item.active { background:rgba(255,255,255,0.1); color:var(--white); border-left-color:var(--accent); font-weight:600; }
+.nav-item .nav-icon { width:28px; font-size:16px; margin-right:10px; text-align:center; }
+.main-content { margin-left:var(--sidebar-width); flex:1; min-height:100vh; }
+
+/* TOP BAR */
+.top-bar { height:var(--header-height); background:var(--white); display:flex; align-items:center; justify-content:space-between; padding:0 30px; box-shadow:0 2px 8px rgba(0,0,0,0.06); position:sticky; top:0; z-index:100; }
+.top-bar .page-title { font-size:18px; font-weight:700; color:var(--primary); }
+.top-bar .user-info { display:flex; align-items:center; gap:12px; font-size:13px; }
+.top-bar .user-avatar { width:36px; height:36px; background:var(--info); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:14px; }
+.top-bar .logout-btn { padding:6px 16px; background:var(--danger); color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; transition:var(--transition); }
+.top-bar .logout-btn:hover { opacity:0.85; }
+.menu-toggle { display:none; background:none; border:none; font-size:24px; cursor:pointer; color:var(--primary); }
+
+/* CARDS & STATS */
+.content-area { padding:25px 30px; }
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; margin-bottom:25px; }
+.stat-card { background:var(--card-bg); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); border-left:4px solid var(--info); transition:var(--transition); }
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(0,0,0,0.12); }
+.stat-card.green { border-left-color:var(--success); }
+.stat-card.red { border-left-color:var(--danger); }
+.stat-card.orange { border-left-color:var(--accent2); }
+.stat-card.blue { border-left-color:var(--info); }
+.stat-card .stat-icon { font-size:28px; margin-bottom:8px; }
+.stat-card .stat-value { font-size:32px; font-weight:800; color:var(--primary); }
+.stat-card .stat-label { font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; }
+
+/* ALERTS */
+.alerts-section { display:grid; grid-template-columns:repeat(auto-fit,minmax(350px,1fr)); gap:20px; margin-bottom:25px; }
+.alert-panel { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+.alert-panel-header { padding:14px 20px; font-weight:700; font-size:14px; color:white; }
+.alert-panel-header.danger-header { background:var(--danger); }
+.alert-panel-header.warning-header { background:var(--accent2); }
+.alert-panel-header.info-header { background:var(--info); }
+.alert-panel-header.success-header { background:var(--success); }
+.alert-panel-body { padding:15px 20px; max-height:250px; overflow-y:auto; }
+.alert-item { padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; display:flex; align-items:center; gap:10px; }
+.alert-item:last-child { border-bottom:none; }
+.alert-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.alert-dot.red { background:var(--danger); }
+.alert-dot.orange { background:var(--accent2); }
+.alert-dot.green { background:var(--success); }
+
+/* MODULE PAGES */
+.module-page { display:none; }
+.module-page.active { display:block; }
+.module-header { margin-bottom:25px; }
+.module-header h2 { font-size:22px; color:var(--primary); margin-bottom:5px; }
+.module-header p { color:var(--text-muted); font-size:13px; }
+
+/* FORMS */
+.form-card { background:var(--card-bg); border-radius:var(--radius); padding:30px; box-shadow:var(--shadow); margin-bottom:25px; }
+.form-card h3 { font-size:16px; color:var(--primary); margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid var(--body-bg); }
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:18px; overflow:visible; }
+.form-group { display:flex; flex-direction:column; position:relative; }
+.form-group label { font-size:12px; font-weight:600; color:var(--text-dark); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.3px; }
+.form-group input,.form-group select,.form-group textarea { padding:10px 14px; border:2px solid var(--border); border-radius:8px; font-size:13px; transition:var(--transition); font-family:inherit; }
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus { border-color:var(--info); outline:none; box-shadow:0 0 0 3px rgba(69,123,157,0.12); }
+.form-group textarea { resize:vertical; min-height:80px; }
+.form-group.full-width { grid-column:1/-1; }
+.form-actions { margin-top:20px; display:flex; gap:12px; flex-wrap:wrap; }
+
+/* BUTTONS */
+.btn { padding:10px 24px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:var(--transition); display:inline-flex; align-items:center; gap:6px; }
+.btn:hover { transform:translateY(-1px); }
+.btn-primary { background:var(--info); color:white; }
+.btn-success { background:var(--success); color:white; }
+.btn-danger { background:var(--danger); color:white; }
+.btn-warning { background:var(--accent2); color:white; }
+.btn-secondary { background:var(--text-muted); color:white; }
+
+/* TABLES */
+.table-card { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; margin-bottom:25px; }
+.table-card h3 { padding:18px 24px; font-size:15px; color:var(--primary); border-bottom:2px solid var(--body-bg); }
+.table-wrapper { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead { background:var(--primary); color:white; }
+th { padding:12px 16px; text-align:left; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; }
+td { padding:11px 16px; border-bottom:1px solid var(--border); }
+tbody tr:hover { background:rgba(69,123,157,0.05); }
+
+/* BADGES */
+.status-badge { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; display:inline-block; }
+.status-safe { background:#d4edda; color:#155724; }
+.status-unsafe { background:#f8d7da; color:#721c24; }
+.status-pending { background:#fff3cd; color:#856404; }
+.status-expired { background:#f8d7da; color:#721c24; }
+.status-active { background:#d4edda; color:#155724; }
+.status-due { background:#fff3cd; color:#856404; }
+
+/* RISK MATRIX */
+.risk-matrix { display:grid; grid-template-columns:40px repeat(5,1fr); grid-template-rows:repeat(5,50px) 30px; gap:2px; max-width:500px; margin:20px 0; font-size:12px; font-weight:700; }
+.risk-cell { display:flex; align-items:center; justify-content:center; border-radius:4px; color:white; }
+.risk-low { background:#2a9d8f; } .risk-medium { background:#f4a261; } .risk-high { background:#e76f51; } .risk-extreme { background:#e63946; }
+.risk-label { display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--text-muted); font-weight:600; }
+
+/* PROGRESS */
+.progress-bar-container { background:var(--border); border-radius:10px; overflow:hidden; height:12px; margin-top:6px; }
+.progress-bar-fill { height:100%; border-radius:10px; transition:width 0.5s ease; }
+.progress-green { background:var(--success); } .progress-orange { background:var(--accent2); } .progress-red { background:var(--danger); }
+
+/* GAUGE */
+.gauge-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin-bottom:25px; }
+.gauge-card { background:var(--card-bg); border-radius:var(--radius); padding:25px; box-shadow:var(--shadow); text-align:center; }
+.gauge-value { font-size:48px; font-weight:800; }
+.gauge-label { font-size:13px; color:var(--text-muted); margin-top:5px; }
+
+/* TOAST */
+.toast-container { position:fixed; top:80px; right:20px; z-index:99999; display:flex; flex-direction:column; gap:10px; }
+.toast { padding:14px 24px; border-radius:8px; color:white; font-size:13px; font-weight:600; box-shadow:0 8px 25px rgba(0,0,0,0.15); animation:slideIn 0.3s ease,fadeOut 0.3s ease 2.7s; min-width:300px; }
+.toast-success { background:var(--success); } .toast-error { background:var(--danger); } .toast-warning { background:var(--accent2); } .toast-info { background:var(--info); }
+@keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes fadeOut { from{opacity:1} to{opacity:0} }
+
+/* MISC */
+.checklist-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.checklist-item input[type="checkbox"] { width:18px; height:18px; accent-color:var(--success); }
+.legal-tag { display:inline-block; padding:3px 10px; border-radius:4px; font-size:10px; font-weight:700; text-transform:uppercase; margin:2px; }
+.tag-iso { background:#dbeafe; color:#1e40af; } .tag-factory { background:#fef3c7; color:#92400e; } .tag-cida { background:#d1fae5; color:#065f46; }
+.tab-bar { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:20px; flex-wrap:wrap; }
+.tab-btn { padding:10px 22px; border:none; background:none; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; transition:var(--transition); }
+.tab-btn.active { color:var(--info); border-bottom-color:var(--info); }
+.tab-content { display:none; } .tab-content.active { display:block; }
+.section-divider { height:1px; background:rgba(255,255,255,0.08); margin:5px 15px; }
+.sidebar-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:999; }
+.sidebar-overlay.active { display:block; }
+.other-input-wrapper { margin-top:6px; display:none; }
+.other-input-wrapper.show { display:block; }
+.other-input-wrapper input { width:100%; padding:8px 12px; border:2px dashed var(--accent2); border-radius:6px; font-size:13px; background:#fffbf0; }
+
+/* 🔍 AUTOCOMPLETE DROPDOWN */
+.autocomplete-dropdown {
+  display:none; position:absolute; top:100%; left:0; right:0;
+  background:#fff; border:2px solid var(--info); border-top:none;
+  border-radius:0 0 8px 8px; max-height:220px; overflow-y:auto;
+  z-index:9999; box-shadow:0 6px 20px rgba(0,0,0,0.18);
+}
+.autocomplete-item { padding:10px 14px; cursor:pointer; border-bottom:1px solid #f0f0f0; transition:background 0.15s; }
+.autocomplete-item:hover { background:#e3f2fd; }
+.autocomplete-item:last-child { border-bottom:none; }
+.ac-name { font-weight:600; font-size:13px; color:var(--primary); }
+.ac-details { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.ac-type { display:inline-block; padding:1px 6px; border-radius:3px; font-size:9px; font-weight:700; text-transform:uppercase; margin-left:6px; }
+.ac-type-emp { background:#d4edda; color:#155724; }
+.ac-type-sc { background:#fff3cd; color:#856404; }
+
+/* 📢 ATTENDEE TAGS */
+.attendee-tags { display:flex; flex-wrap:wrap; gap:6px; min-height:44px; padding:10px; background:var(--body-bg); border-radius:8px; border:2px dashed var(--border); align-items:center; }
+.attendee-tag { display:inline-flex; align-items:center; gap:6px; padding:6px 10px 6px 14px; background:#e3f2fd; border-radius:20px; font-size:12px; font-weight:500; }
+.attendee-remove { cursor:pointer; color:var(--danger); font-weight:bold; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(230,57,70,0.1); font-size:14px; line-height:1; transition:var(--transition); }
+.attendee-remove:hover { background:rgba(230,57,70,0.3); }
+.attendee-empty { color:var(--text-muted); font-size:12px; font-style:italic; }
+
+/* 🆕 BRIEFING PHOTO UPLOAD */
+.photo-upload-box { border:2px dashed var(--info); padding:15px; border-radius:8px; background:#f0f7ff; margin-top:15px; }
+.photo-upload-box label { color:var(--info); font-weight:bold; }
+.photo-preview { margin-top:15px; text-align:center; display:none; }
+.photo-preview img { max-width:100%; height:200px; border-radius:8px; border:2px solid #eee; object-fit:cover; }
+.photo-preview .photo-success { font-size:13px; color:var(--success); font-weight:bold; margin-top:8px; }
+
+/* RESPONSIVE */
+@media (max-width:992px) {
+  .sidebar { transform:translateX(-100%); } .sidebar.open { transform:translateX(0); }
+  .main-content { margin-left:0; } .menu-toggle { display:block; }
+  .stats-grid { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+}
+@media (max-width:600px) {
+  .content-area { padding:15px; } .form-grid { grid-template-columns:1fr; }
+  .stats-grid { grid-template-columns:1fr; } .alerts-section { grid-template-columns:1fr; }
+  .login-box { padding:30px 20px; }
+}
+.sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:transparent; }
+.sidebar::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.2); border-radius:4px; }
+@media print { .sidebar,.top-bar { display:none!important; } .main-content { margin-left:0!important; } }
+</style>
+</head>
+<body>
+  <!-- ============================================
+     LOGIN SCREEN
+     ============================================ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="logo-area">
+      <div class="logo-icon">🛡️</div>
+      <h1>HSE Management System</h1>
+      <p>Hayleys Fentons Limited — Sri Lanka</p>
+    </div>
+    <input type="text" id="loginUser" placeholder="Username">
+    <input type="password" id="loginPass" placeholder="Password">
+    <button onclick="handleLogin()">🔐 Sign In</button>
+    <div class="login-error" id="loginError">Invalid credentials. Please try again.</div>
+    <p style="margin-top:18px;font-size:11px;color:#aaa;">v4.0.0 | ISO 45001 | Factory Ordinance | CIDA Compliant</p>
+  </div>
+</div>
+
+<!-- ============================================
+     APP CONTAINER
+     ============================================ -->
+<div class="app-container" id="appContainer">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR — 🆕 REORDERED: Toolbox Talk/Briefing moved UP -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>🛡️ HSE System</h2>
+      <small>Hayleys Fentons Ltd — v4.0</small>
+    </div>
+    <div class="sidebar-nav">
+
+      <div class="nav-section-title">Main</div>
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</div>
+
+      <!-- 🆕 PRIORITY 1: Toolbox Talk / Daily Briefing — MOVED TO TOP -->
+      <div class="nav-section-title">📢 Daily Operations</div>
+      <div class="nav-item" data-page="briefing"><span class="nav-icon">📢</span> Toolbox Talk / Briefing</div>
+
+      <!-- 🆕 PRIORITY 2: Attendance -->
+      <div class="nav-section-title">👥 Attendance</div>
+      <div class="nav-item" data-page="employeeAttendance"><span class="nav-icon">📋</span> Employee Attendance</div>
+      <div class="nav-item" data-page="subContractorAttendance"><span class="nav-icon">👷</span> Sub-Contractor Attendance</div>
+
+      <div class="section-divider"></div>
+      <div class="nav-section-title">Incident & Risk</div>
+      <div class="nav-item" data-page="incidents"><span class="nav-icon">🚨</span> Incident Management</div>
+      <div class="nav-item" data-page="hira"><span class="nav-icon">⚠️</span> HIRA / Risk Assessment</div>
+
+      <div class="nav-section-title">Inspections</div>
+      <div class="nav-item" data-page="inspections"><span class="nav-icon">🔍</span> Safety Inspections</div>
+      <div class="nav-item" data-page="powertools"><span class="nav-icon">🔧</span> Power Tool Safety</div>
+
+      <div class="section-divider"></div>
+      <div class="nav-section-title">🔥 Fire Safety</div>
+      <div class="nav-item" data-page="fireEquipment"><span class="nav-icon">🧯</span> Fire Equipment Register</div>
+      <div class="nav-item" data-page="fireHydrant"><span class="nav-icon">🚒</span> Hydrant & Hose Reel</div>
+      <div class="nav-item" data-page="fireAlarm"><span class="nav-icon">🔔</span> Alarm & Detection</div>
+      <div class="nav-item" data-page="fireDrill"><span class="nav-icon">🏃</span> Fire Drill Management</div>
+
+      <div class="section-divider"></div>
+      <div class="nav-section-title">Emergency & Training</div>
+      <div class="nav-item" data-page="emergency"><span class="nav-icon">🆘</span> Emergency Preparedness</div>
+      <!-- 🆕 Training — Toolbox Talk REMOVED from here -->
+      <div class="nav-item" data-page="training"><span class="nav-icon">📚</span> Training Management</div>
+      <div class="nav-item" data-page="ppe"><span class="nav-icon">🦺</span> PPE Management</div>
+      <div class="nav-item" data-page="ptw"><span class="nav-icon">📋</span> Permit to Work</div>
+
+      <div class="section-divider"></div>
+      <div class="nav-section-title">Health & Personnel</div>
+      <div class="nav-item" data-page="healthInfo"><span class="nav-icon">🏥</span> Health Information</div>
+
+      <div class="section-divider"></div>
+      <div class="nav-section-title">Compliance</div>
+      <div class="nav-item" data-page="cida"><span class="nav-icon">🏗️</span> CIDA Compliance</div>
+      <div class="nav-item" data-page="legal"><span class="nav-icon">⚖️</span> Legal Register</div>
+      <div class="nav-item" data-page="isoAudit"><span class="nav-icon">✅</span> ISO 45001 Audit</div>
+      <div class="nav-item" data-page="factoryChecklist"><span class="nav-icon">🏭</span> Factory Ordinance</div>
+
+      <div class="section-divider"></div>
+      <div class="nav-section-title">System</div>
+      <div class="nav-item" data-page="reports"><span class="nav-icon">📈</span> Reports & Analytics</div>
+      <div class="nav-item" data-page="settings"><span class="nav-icon">⚙️</span> Admin Settings</div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:15px;">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <span class="page-title" id="pageTitle">📊 Dashboard</span>
+      </div>
+      <div class="user-info">
+        <span id="currentDate"></span>
+        <div class="user-avatar" id="userAvatar">M</div>
+        <span id="userName">Mahesh</span>
+        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+      </div>
+    </div>
+    <div class="content-area" id="contentArea"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script>
+// ============================================
+// ⚙️ CONFIGURATION
+// ============================================
+const CONFIG = {
+  SCRIPT_URL:'https://script.google.com/macros/s/AKfycbwEXa-zTxAO6tQgZHxsyXpyVehJGp8h5CyOyjCC7YOwqpE8iwedd4VFGfPGyzYn1Znj/exec',
+  ADMIN_USER:'mahesh', ADMIN_PASS:'44234',
+  COMPANY:'Hayleys Fentons Limited', DEVELOPER:'Mahesh', POSITION:'HSE Officer',
+  VERSION:'4.0.0'
+};
+
+// ============================================
+// 🔧 GLOBAL VARIABLES
+// ============================================
+var briefingAttendees = [];
+
+// ============================================
+// 🛠️ UTILITY FUNCTIONS — ALL MISSING ONES ADDED
+// ============================================
+
+// DOM Selector shortcut
+function $(id) { return document.getElementById(id); }
+
+// Get current timestamp
+function now() { return new Date().toLocaleString('en-LK', {timeZone:'Asia/Colombo'}); }
+
+// Get today's date (yyyy-mm-dd)
+function today() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// Generate unique ID with prefix
+function generateId(prefix) {
+  const num = Math.floor(Math.random()*9000)+1000;
+  const ts = Date.now().toString().slice(-4);
+  return prefix + '-' + num + ts;
+}
+
+// Show toast notification
+function showToast(message, type) {
+  type = type || 'info';
+  const container = $('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+}
+
+// Store data to localStorage
+function storeData(key, data) {
+  try {
+    localStorage.setItem('hse_' + key, JSON.stringify(data));
+  } catch(e) {
+    console.error('Storage error:', e);
+    showToast('Storage error! Clear old data.', 'error');
+  }
+}
+
+// Get stored data from localStorage
+function getStoredData(key) {
+  try {
+    const data = localStorage.getItem('hse_' + key);
+    return data ? JSON.parse(data) : [];
+  } catch(e) {
+    console.error('Read error:', e);
+    return [];
+  }
+}
+
+// Add single record to stored array
+function addRecord(key, record) {
+  const data = getStoredData(key);
+  data.unshift(record); // Add to beginning (newest first)
+  storeData(key, data);
+}
+
+// Submit data to Google Sheet via Apps Script
+function submitToSheet(sheetName, values) {
+  showToast('☁️ Syncing to Google Sheets...', 'info');
+  fetch(CONFIG.SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sheetName: sheetName, values: values })
+  })
+  .then(function() {
+    showToast('☁️ Synced to ' + sheetName + '!', 'success');
+  })
+  .catch(function(err) {
+    console.error('Sync error:', err);
+    showToast('⚠️ Sync failed. Data saved locally.', 'warning');
+  });
+}
+
+// Build select dropdown with "Other" option
+function buildSelect(id, options, label) {
+  return `
+    <div class="form-group">
+      <label>${label}</label>
+      <select id="${id}" onchange="toggleOtherInput('${id}','${id}Other')">
+        <option value="">— Select —</option>
+        ${options.map(function(o) { return '<option value="'+o+'">'+o+'</option>'; }).join('')}
+        <option value="__other__">Other (Specify)</option>
+      </select>
+      <div class="other-input-wrapper" id="${id}OtherWrap">
+        <input type="text" id="${id}Other" placeholder="Specify other...">
+      </div>
+    </div>`;
+}
+
+// Toggle "Other" input visibility
+function toggleOtherInput(selectId, otherId) {
+  const sel = $(selectId);
+  const wrap = $(selectId + 'OtherWrap');
+  if (sel && wrap) {
+    if (sel.value === '__other__') {
+      wrap.classList.add('show');
+      var otherInput = $(otherId);
+      if (otherInput) otherInput.focus();
+    } else {
+      wrap.classList.remove('show');
+    }
+  }
+}
+
+// Get select value (handles "Other" option)
+function getSelectValue(selectId, otherId) {
+  const sel = $(selectId);
+  if (!sel) return '';
+  if (sel.value === '__other__') {
+    const other = $(otherId);
+    return other ? other.value : '';
+  }
+  return sel.value;
+}
+
+// Convert file to Base64
+function fileToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function() { resolve(reader.result); };
+    reader.onerror = function(err) { reject(err); };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Preview incident photo
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = $('imagePreview');
+      const container = $('imagePreviewContainer');
+      if (preview) preview.src = e.target.result;
+      if (container) container.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// Preview training photo
+function previewTrainingImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = $('trImagePreview');
+      const container = $('trImagePreviewContainer');
+      if (preview) preview.src = e.target.result;
+      if (container) container.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// 🆕 Preview briefing photo
+function previewBriefingImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = $('brImagePreview');
+      const container = $('brImagePreviewContainer');
+      if (preview) preview.src = e.target.result;
+      if (container) container.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// Update LTI-Free Safe Days counter
+function updateSafeDays() {
+  const lastLTI = localStorage.getItem('lastLTIDate');
+  const el = $('safe-days-count');
+  if (!el) return;
+  
+  if (lastLTI) {
+    const diff = Math.floor((new Date() - new Date(lastLTI)) / (1000*60*60*24));
+    el.textContent = diff;
+  } else {
+    const manual = localStorage.getItem('ltiFreeDays');
+    el.textContent = manual || '145';
+  }
+}
+
+// ============================================
+// 🔍 AUTOCOMPLETE / PERSONNEL DATABASE SYSTEM
+// ============================================
+
+// 🗄️ Master Personnel Database
+function getPersonnelDB() {
+  const db = new Map();
+
+  // Source 1: Employee Attendance
+  getStoredData('employeeAttendance').forEach(function(r) {
+    if (!r.name) return;
+    const key = r.name.toLowerCase().trim();
+    const ex = db.get(key) || {};
+    db.set(key, Object.assign({}, ex, {
+      name:r.name, empId:r.empId||ex.empId||'', nic:r.nic||ex.nic||'',
+      designation:r.designation||ex.designation||'', department:r.department||ex.department||'',
+      project:r.project||ex.project||'', company:'Hayleys Fentons', type:'employee'
+    }));
+  });
+
+  // Source 2: Sub-Contractor Attendance
+  getStoredData('subContractorAttendance').forEach(function(r) {
+    if (!r.name) return;
+    const key = r.name.toLowerCase().trim();
+    const ex = db.get(key) || {};
+    db.set(key, Object.assign({}, ex, {
+      name:r.name, nic:r.nic||ex.nic||'', trade:r.trade||ex.trade||'',
+      designation:r.trade||ex.designation||'', company:r.company||ex.company||'',
+      project:r.project||ex.project||'', type:'subcontractor'
+    }));
+  });
+
+  // Source 3: Health Info
+  getStoredData('healthInfo').forEach(function(r) {
+    if (!r.name) return;
+    const key = r.name.toLowerCase().trim();
+    const ex = db.get(key) || {};
+    db.set(key, Object.assign({}, ex, {
+      name:r.name, nic:r.nic||ex.nic||'', company:r.company||ex.company||'',
+      designation:r.designation||ex.designation||'', phone:r.phone||ex.phone||'',
+      bloodGroup:r.bloodGroup||ex.bloodGroup||''
+    }));
+  });
+
+  // Source 4: Briefing attendees
+  getStoredData('briefings').forEach(function(r) {
+    if (r.attendeesList) {
+      r.attendeesList.forEach(function(a) {
+        if (!a.name) return;
+        const key = a.name.toLowerCase().trim();
+        if (!db.has(key)) {
+          db.set(key, {
+            name:a.name, empId:a.empId||'', nic:a.nic||'',
+            designation:a.designation||'', company:a.company||'', type:a.type||'employee'
+          });
+        }
+      });
+    }
+  });
+
+  // Source 5: Incidents
+  getStoredData('incidents').forEach(function(r) {
+    if (r.reportedBy) {
+      const key = r.reportedBy.toLowerCase().trim();
+      if (!db.has(key)) db.set(key, {name:r.reportedBy, type:'employee'});
+    }
+  });
+
+  // Source 6: PPE Records
+  getStoredData('ppeRecords').forEach(function(r) {
+    if (r.name) {
+      const key = r.name.toLowerCase().trim();
+      const ex = db.get(key) || {};
+      db.set(key, Object.assign({}, ex, {name:r.name, empId:r.empId||ex.empId||'', type:ex.type||'employee'}));
+    }
+  });
+
+  return Array.from(db.values());
+}
+
+// 🏢 Company List for autocomplete
+function getCompanyList() {
+  const companies = new Set();
+  getStoredData('subContractorAttendance').forEach(function(r) { if(r.company) companies.add(r.company); });
+  getStoredData('healthInfo').forEach(function(r) { if(r.company && r.company!=='Direct Employee' && r.company!=='Hayleys Fentons') companies.add(r.company); });
+  getStoredData('cida').forEach(function(r) { if(r.contractor) companies.add(r.contractor); });
+  return Array.from(companies);
+}
+
+// 🏗️ Project List for autocomplete
+function getProjectList() {
+  const projects = new Set();
+  getStoredData('employeeAttendance').forEach(function(r) { if(r.project) projects.add(r.project); });
+  getStoredData('subContractorAttendance').forEach(function(r) { if(r.project) projects.add(r.project); });
+  return Array.from(projects);
+}
+
+// Helper: set input field value
+function setFieldValue(id, value) { const el=$(id); if(el && value) el.value=value; }
+
+// Helper: set select dropdown if option exists
+function setSelectIfMatch(id, value) {
+  const el = $(id);
+  if (!el || !value) return;
+  for (var i=0; i<el.options.length; i++) {
+    if (el.options[i].value === value || el.options[i].textContent.trim() === value) {
+      el.value = el.options[i].value;
+      return;
+    }
+  }
+}
+
+// 🔍 Setup autocomplete on any input field
+function setupAutocomplete(inputId, onSelect, dataFn) {
+  const input = $(inputId);
+  if (!input) return;
+
+  // Remove existing dropdown if re-rendering
+  const existingDD = $(inputId + '_ac_dd');
+  if (existingDD) existingDD.remove();
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'autocomplete-dropdown';
+  dropdown.id = inputId + '_ac_dd';
+  input.parentElement.appendChild(dropdown);
+
+  input.addEventListener('input', function() {
+    const val = this.value.toLowerCase().trim();
+    if (val.length < 1) { dropdown.innerHTML=''; dropdown.style.display='none'; return; }
+
+    var matches = [];
+    if (dataFn === 'company') {
+      matches = getCompanyList().filter(function(c) {
+        return c.toLowerCase().includes(val);
+      }).map(function(c) { return {name:c, type:'company'}; }).slice(0, 8);
+    } else if (dataFn === 'project') {
+      matches = getProjectList().filter(function(p) {
+        return p.toLowerCase().includes(val);
+      }).map(function(p) { return {name:p, type:'project'}; }).slice(0, 8);
+    } else {
+      var personnel = getPersonnelDB();
+      matches = personnel.filter(function(p) {
+        return (p.name||'').toLowerCase().includes(val) ||
+               (p.nic||'').toLowerCase().includes(val) ||
+               (p.empId||'').toLowerCase().includes(val);
+      }).slice(0, 8);
+    }
+
+    if (matches.length === 0) { dropdown.innerHTML=''; dropdown.style.display='none'; return; }
+
+    dropdown.innerHTML = matches.map(function(m, i) {
+      if (dataFn === 'company') {
+        return '<div class="autocomplete-item" data-idx="'+i+'"><div class="ac-name">🏢 '+m.name+'</div></div>';
+      }
+      if (dataFn === 'project') {
+        return '<div class="autocomplete-item" data-idx="'+i+'"><div class="ac-name">🏗️ '+m.name+'</div></div>';
+      }
+      var badge = m.type==='subcontractor' ? '<span class="ac-type ac-type-sc">SC</span>' : '<span class="ac-type ac-type-emp">EMP</span>';
+      return '<div class="autocomplete-item" data-idx="'+i+'">' +
+        '<div class="ac-name">' + m.name + ' ' + badge + '</div>' +
+        '<div class="ac-details">' + (m.empId||m.nic||'') + ' ' + (m.designation||m.trade||'') + (m.company ? ' • '+m.company : '') + '</div>' +
+      '</div>';
+    }).join('');
+    dropdown.style.display = 'block';
+
+    dropdown.querySelectorAll('.autocomplete-item').forEach(function(item, i) {
+      item.addEventListener('click', function() {
+        input.value = matches[i].name;
+        dropdown.style.display = 'none';
+        if (onSelect) onSelect(matches[i]);
+      });
+    });
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none';
+  });
+}
+
+// ============================================
+// 🔐 AUTH
+// ============================================
+function handleLogin() {
+  const u = $('loginUser').value.trim(), p = $('loginPass').value.trim();
+  if (u === CONFIG.ADMIN_USER && p === CONFIG.ADMIN_PASS) {
+    localStorage.setItem('hse_auth', JSON.stringify({user:u, loginTime:now()}));
+    $('loginScreen').style.display = 'none';
+    $('appContainer').classList.add('active');
+    $('userName').textContent = 'Mahesh';
+    $('userAvatar').textContent = 'M';
+    initApp();
+    showToast('Welcome back, Mahesh!', 'success');
+  } else {
+    $('loginError').style.display = 'block';
+    showToast('Invalid credentials', 'error');
+  }
+}
+
+function handleLogout() {
+  localStorage.removeItem('hse_auth');
+  location.reload();
+}
+
+function checkAuth() {
+  if (localStorage.getItem('hse_auth')) {
+    $('loginScreen').style.display = 'none';
+    $('appContainer').classList.add('active');
+    initApp();
+  }
+}
+
+function toggleSidebar() {
+  $('sidebar').classList.toggle('open');
+  $('sidebarOverlay').classList.toggle('active');
+}
+
+// ============================================
+// 🧭 NAVIGATION — Updated with all modules
+// ============================================
+function initNavigation() {
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.nav-item').forEach(function(i) { i.classList.remove('active'); });
+      this.classList.add('active');
+      renderPage(this.getAttribute('data-page'));
+      if (window.innerWidth <= 992) toggleSidebar();
+    });
+  });
+}
+
+function renderPage(page) {
+  const titles = {
+    dashboard:'📊 Dashboard',
+    briefing:'📢 Toolbox Talk / Daily Briefing',
+    employeeAttendance:'📋 Employee Attendance',
+    subContractorAttendance:'👷 Sub-Contractor Attendance',
+    incidents:'🚨 Incident Management',
+    hira:'⚠️ HIRA / Risk Assessment',
+    inspections:'🔍 Safety Inspections',
+    powertools:'🔧 Power Tool Safety',
+    fireEquipment:'🧯 Fire Equipment Register',
+    fireHydrant:'🚒 Hydrant & Hose Reel',
+    fireAlarm:'🔔 Fire Alarm & Detection',
+    fireDrill:'🏃 Fire Drill Management',
+    emergency:'🆘 Emergency Preparedness',
+    training:'📚 Training Management',
+    ppe:'🦺 PPE Management',
+    ptw:'📋 Permit to Work',
+    healthInfo:'🏥 Health Information',
+    cida:'🏗️ CIDA Compliance',
+    legal:'⚖️ Legal Register',
+    isoAudit:'✅ ISO 45001 Audit',
+    factoryChecklist:'🏭 Factory Ordinance',
+    reports:'📈 Reports & Analytics',
+    settings:'⚙️ Admin Settings'
+  };
+  $('pageTitle').textContent = titles[page] || page;
+
+  const renderers = {
+    dashboard:renderDashboard,
+    briefing:renderBriefing,
+    employeeAttendance:renderEmployeeAttendance,
+    subContractorAttendance:renderSubContractorAttendance,
+    incidents:renderIncidents,
+    hira:renderHIRA,
+    inspections:renderInspections,
+    powertools:renderPowerTools,
+    fireEquipment:renderFireEquipment,
+    fireHydrant:renderFireHydrant,
+    fireAlarm:renderFireAlarm,
+    fireDrill:renderFireDrill,
+    emergency:renderEmergency,
+    training:renderTraining,
+    ppe:renderPPE,
+    ptw:renderPTW,
+    healthInfo:renderHealthInfo,
+    cida:renderCIDA,
+    legal:renderLegal,
+    isoAudit:renderISOAudit,
+    factoryChecklist:renderFactoryChecklist,
+    reports:renderReports,
+    settings:renderSettings
+  };
+  if (renderers[page]) renderers[page]();
+}
+
+function initApp() {
+  $('currentDate').textContent = new Date().toLocaleDateString('en-LK', {
+    weekday:'short', year:'numeric', month:'short', day:'numeric'
+  });
+  initNavigation();
+  renderDashboard();
+  seedDemoData();
+  updateSafeDays();
+}
+
+// ============================================
+// 🗃️ DEMO DATA — with personnel for autocomplete
+// ============================================
+function seedDemoData() {
+  if (!localStorage.getItem('hse_seeded')) {
+    storeData('fireEquipment', [
+      {id:'FE-001',type:'CO2',capacity:'5kg',location:'Workshop A',installDate:'2023-06-15',expiryDate:'2024-06-15',lastInspection:'2024-01-10',nextDue:'2024-07-10',status:'Serviceable'},
+      {id:'FE-002',type:'DCP',capacity:'9kg',location:'Store Room',installDate:'2023-03-20',expiryDate:'2025-03-20',lastInspection:'2024-02-15',nextDue:'2024-08-15',status:'Serviceable'},
+      {id:'FE-003',type:'Foam',capacity:'9L',location:'Office Block',installDate:'2022-01-10',expiryDate:'2024-01-10',lastInspection:'2023-12-01',nextDue:'2024-06-01',status:'Expired'}
+    ]);
+    storeData('incidents', [
+      {id:'INC-001',date:'2024-03-15',type:'Near Miss',location:'Site B',description:'Unsecured scaffolding',severity:'Medium',status:'Closed',reportedBy:'Kamal Perera'},
+      {id:'INC-002',date:'2024-04-02',type:'First Aid',location:'Workshop',description:'Minor cut from grinder',severity:'Low',status:'Open',reportedBy:'Nimal Silva'}
+    ]);
+    storeData('powerTools', [
+      {id:'PT-001',name:'Angle Grinder',voltage:'230V',guardCondition:'Good',cableCondition:'Good',elcb:'Yes',ppe:'Yes',lastInspection:'2024-03-01',nextDue:'2024-06-01',status:'SAFE'},
+      {id:'PT-002',name:'Circular Saw',voltage:'230V',guardCondition:'Damaged',cableCondition:'Fair',elcb:'No',ppe:'Yes',lastInspection:'2024-02-15',nextDue:'2024-05-15',status:'UNSAFE'}
+    ]);
+    storeData('fireDrills', [
+      {id:'FD-001',date:'2024-01-15',type:'Full Evacuation',participation:'92',evacuationTime:'4 min 30 sec',observations:'Assembly B congested',actions:'Add signage'}
+    ]);
+    // Personnel data for autocomplete
+    storeData('employeeAttendance', [
+      {id:'EA-D1',date:'2024-12-01',name:'Kamal Perera',empId:'EMP-001',nic:'199012345678',designation:'Site Engineer',department:'Civil',project:'City Tower',checkIn:'07:30',checkOut:'17:30',workHours:'10.0',overtime:'2',status:'Present',timestamp:now()},
+      {id:'EA-D2',date:'2024-12-01',name:'Nimal Silva',empId:'EMP-002',nic:'198523456789',designation:'Electrician',department:'Electrical',project:'City Tower',checkIn:'07:30',checkOut:'17:30',workHours:'10.0',overtime:'0',status:'Present',timestamp:now()},
+      {id:'EA-D3',date:'2024-12-01',name:'Sunil Bandara',empId:'EMP-003',nic:'199234567890',designation:'Mason',department:'Civil',project:'City Tower',checkIn:'07:00',checkOut:'17:00',workHours:'10.0',overtime:'0',status:'Present',timestamp:now()},
+      {id:'EA-D4',date:'2024-12-01',name:'Mahesh Dayarathna',empId:'EMP-004',nic:'199456789012',designation:'Safety Officer',department:'HSE',project:'City Tower',checkIn:'07:00',checkOut:'17:30',workHours:'10.5',overtime:'0.5',status:'Present',timestamp:now()},
+      {id:'EA-D5',date:'2024-12-01',name:'Ruwan Jayawardena',empId:'EMP-005',nic:'198867890123',designation:'Foreman',department:'Civil',project:'City Tower',checkIn:'06:30',checkOut:'17:00',workHours:'10.5',overtime:'0.5',status:'Present',timestamp:now()}
+    ]);
+    storeData('subContractorAttendance', [
+      {id:'SCA-D1',date:'2024-12-01',company:'Lanka Builders',name:'Ruwan Fernando',nic:'199345678901',trade:'Welder',project:'City Tower',checkIn:'07:00',checkOut:'17:00',workHours:'10.0',safetyInduction:'Yes',ppeCompliance:'Yes',supervisor:'Kamal Perera',status:'Present',timestamp:now()},
+      {id:'SCA-D2',date:'2024-12-01',company:'ABC Electricals',name:'Chaminda Jayasinghe',nic:'198856789012',trade:'Electrician',project:'City Tower',checkIn:'07:30',checkOut:'17:00',workHours:'9.5',safetyInduction:'Yes',ppeCompliance:'Yes',supervisor:'Nimal Silva',status:'Present',timestamp:now()},
+      {id:'SCA-D3',date:'2024-12-01',company:'Lanka Builders',name:'Pradeep Kumara',nic:'199578901234',trade:'Helper/Labourer',project:'City Tower',checkIn:'07:00',checkOut:'17:00',workHours:'10.0',safetyInduction:'No',ppeCompliance:'Yes',supervisor:'Kamal Perera',status:'Present',timestamp:now()}
+    ]);
+    localStorage.setItem('hse_seeded', 'true');
+  }
+}
+// ============================================
+// 📊 DASHBOARD
+// ============================================
+function renderDashboard(){
+  const incidents=getStoredData('incidents'),fireEq=getStoredData('fireEquipment'),
+    tools=getStoredData('powerTools'),drills=getStoredData('fireDrills'),trainings=getStoredData('trainings');
+  const openInc=incidents.filter(function(i){return i.status!=='Closed';}).length;
+  const nearMiss=incidents.filter(function(i){return i.type==='Near Miss';}).length;
+  const unsafeTools=tools.filter(function(t){return t.status==='UNSAFE';}).length;
+  const expFE=fireEq.filter(function(f){return f.status==='Expired'||f.status==='Recharge Required';}).length;
+  const briefings=getStoredData('briefings');
+  const todayBriefings=briefings.filter(function(b){return b.date===today();}).length;
+  const todayBrAttendees=briefings.filter(function(b){return b.date===today();}).reduce(function(s,b){return s+(b.attendeeCount||0);},0);
+  const ea=getStoredData('employeeAttendance');
+  const todayEA=ea.filter(function(r){return r.date===today();});
+  const empPresent=todayEA.filter(function(r){return r.status==='Present'||r.status==='Late';}).length;
+  const sca=getStoredData('subContractorAttendance');
+  const todaySCA=sca.filter(function(r){return r.date===today();});
+  const scPresent=todaySCA.filter(function(r){return r.status==='Present';}).length;
+
+  $('contentArea').innerHTML=`
+    <div class="module-page active">
+      <div class="stats-grid">
+        <div class="stat-card green"><div class="stat-icon">🟢</div><div class="stat-value" id="safe-days-count">0</div><div class="stat-label">LTI-Free Days</div></div>
+        <div class="stat-card blue"><div class="stat-icon">📢</div><div class="stat-value">${todayBriefings}</div><div class="stat-label">Today's Briefings (${todayBrAttendees} persons)</div></div>
+        <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-value">${empPresent}</div><div class="stat-label">Employees Present</div></div>
+        <div class="stat-card orange"><div class="stat-icon">👷</div><div class="stat-value">${scPresent}</div><div class="stat-label">SC Workers Present</div></div>
+        <div class="stat-card red"><div class="stat-icon">🚨</div><div class="stat-value">${openInc}</div><div class="stat-label">Open Incidents</div></div>
+        <div class="stat-card orange"><div class="stat-icon">⚠️</div><div class="stat-value">${nearMiss}</div><div class="stat-label">Near Misses</div></div>
+        <div class="stat-card blue"><div class="stat-icon">🔧</div><div class="stat-value">${unsafeTools}</div><div class="stat-label">Unsafe Tools</div></div>
+        <div class="stat-card red"><div class="stat-icon">🧯</div><div class="stat-value">${expFE}</div><div class="stat-label">Fire Equip. Alerts</div></div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge-card"><div class="gauge-value" style="color:var(--success)">87%</div><div class="gauge-label">ISO 45001 Compliance</div><div class="progress-bar-container"><div class="progress-bar-fill progress-green" style="width:87%"></div></div></div>
+        <div class="gauge-card"><div class="gauge-value" style="color:var(--info)">92%</div><div class="gauge-label">Factory Ordinance</div><div class="progress-bar-container"><div class="progress-bar-fill progress-green" style="width:92%"></div></div></div>
+        <div class="gauge-card"><div class="gauge-value" style="color:var(--accent2)">78%</div><div class="gauge-label">CIDA Compliance</div><div class="progress-bar-container"><div class="progress-bar-fill progress-orange" style="width:78%"></div></div></div>
+      </div>
+      <div class="alerts-section">
+        <div class="alert-panel"><div class="alert-panel-header danger-header">🧯 Fire Equipment Alerts</div><div class="alert-panel-body">
+          ${fireEq.filter(function(f){return f.status==='Expired'||f.status==='Recharge Required';}).map(function(f){return '<div class="alert-item"><div class="alert-dot red"></div><div><strong>'+f.id+'</strong> ('+f.type+') — '+f.location+': <strong>'+f.status+'</strong></div></div>';}).join('')||'<div class="alert-item"><div class="alert-dot green"></div>All serviceable</div>'}
+        </div></div>
+        <div class="alert-panel"><div class="alert-panel-header warning-header">🔧 Power Tool Alerts</div><div class="alert-panel-body">
+          ${tools.filter(function(t){return t.status==='UNSAFE';}).map(function(t){return '<div class="alert-item"><div class="alert-dot red"></div><div><strong>'+t.id+'</strong> '+t.name+' — UNSAFE</div></div>';}).join('')||'<div class="alert-item"><div class="alert-dot green"></div>All safe</div>'}
+        </div></div>
+        <div class="alert-panel"><div class="alert-panel-header info-header">🚨 Recent Incidents</div><div class="alert-panel-body">
+          ${incidents.slice(0,5).map(function(i){return '<div class="alert-item"><div class="alert-dot '+(i.status==='Closed'?'green':'orange')+'"></div><div><strong>'+i.id+'</strong> '+i.type+' — '+(i.description||'').substring(0,50)+'... ['+i.status+']</div></div>';}).join('')||'<div class="alert-item"><div class="alert-dot green"></div>No incidents</div>'}
+        </div></div>
+        <div class="alert-panel"><div class="alert-panel-header success-header">📢 Today\'s Briefings</div><div class="alert-panel-body">
+          ${briefings.filter(function(b){return b.date===today();}).map(function(b){return '<div class="alert-item"><div class="alert-dot green"></div><div><strong>'+b.topic+'</strong> — '+(b.attendeeCount||0)+' attendees ('+b.type+')</div></div>';}).join('')||'<div class="alert-item"><div class="alert-dot orange"></div>No briefings today</div>'}
+        </div></div>
+      </div>
+      <div class="form-card"><h3>📜 Legal Framework</h3><div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <span class="legal-tag tag-iso">ISO 45001:2018</span><span class="legal-tag tag-factory">Factory Ordinance</span><span class="legal-tag tag-cida">CIDA</span>
+      </div></div>
+    </div>`;
+  updateSafeDays();
+}
+
+// ============================================
+// 🚨 INCIDENT MANAGEMENT
+// ============================================
+function renderIncidents(){
+  const incidents=getStoredData('incidents');
+  const incidentTypes=['Near Miss','First Aid','Medical Treatment','Lost Time Injury','Fatality','Property Damage','Environmental','Fire Incident','Chemical Spill','Electrical Incident','Falling Object','Slip/Trip/Fall','Vehicle Accident','Crane/Lifting Incident','Confined Space Incident','Drowning','Heat Stroke','Snake/Insect Bite','Structural Collapse'];
+  const bodyParts=['Head','Face','Eyes','Ears','Nose','Mouth/Teeth','Neck','Shoulder (Left)','Shoulder (Right)','Upper Arm (Left)','Upper Arm (Right)','Elbow (Left)','Elbow (Right)','Forearm (Left)','Forearm (Right)','Wrist (Left)','Wrist (Right)','Hand (Left)','Hand (Right)','Fingers (Left)','Fingers (Right)','Chest','Abdomen','Upper Back','Lower Back','Spine','Hip (Left)','Hip (Right)','Groin','Thigh (Left)','Thigh (Right)','Knee (Left)','Knee (Right)','Shin (Left)','Shin (Right)','Ankle (Left)','Ankle (Right)','Foot (Left)','Foot (Right)','Toes (Left)','Toes (Right)','Multiple Body Parts','Internal Organs','Whole Body','N/A'];
+
+  $('contentArea').innerHTML=`
+    <div class="module-page active">
+      <div class="module-header"><h2>🚨 Incident Management</h2><p>Record accidents, near misses & track corrective actions.</p>
+        <span class="legal-tag tag-factory">Factory Ordinance Sec. 61</span><span class="legal-tag tag-iso">ISO 45001 Clause 10.2</span></div>
+      <div class="form-card"><h3>📝 Report New Incident</h3><div class="form-grid">
+        <div class="form-group"><label>Date *</label><input type="date" id="incDate" value="${today()}"></div>
+        <div class="form-group"><label>Time</label><input type="time" id="incTime"></div>
+        ${buildSelect('incType',incidentTypes,'Incident Type *')}
+        <div class="form-group"><label>Severity *</label><select id="incSeverity"><option value="">— Select —</option><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></div>
+        <div class="form-group"><label>Location *</label><input type="text" id="incLocation" placeholder="e.g., Site A - Block 3"></div>
+        <div class="form-group"><label>Reported By *</label><input type="text" id="incReportedBy" placeholder="🔍 Type name to search..."></div>
+        <div class="form-group"><label>Injured Person</label><input type="text" id="incInjured" placeholder="🔍 Type name to search..."></div>
+        ${buildSelect('incBodyPart',bodyParts,'Body Part Affected')}
+        <div class="form-group full-width"><label>Description *</label><textarea id="incDescription" placeholder="Detailed description..."></textarea></div>
+        <div class="form-group full-width"><label>Root Cause</label><textarea id="incRCA" placeholder="Root cause(s)..."></textarea></div>
+        <div class="form-group full-width"><label>Corrective Actions</label><textarea id="incActions" placeholder="Corrective actions..."></textarea></div>
+        <div class="form-group"><label>Status</label><select id="incStatus"><option>Open</option><option>Under Investigation</option><option>Corrective Action Pending</option><option>Closed</option></select></div>
+        <div class="form-group full-width" style="border:1px dashed #007bff;padding:15px;border-radius:8px;">
+          <label style="color:#007bff;font-weight:bold;">📸 Evidence Photo:</label>
+          <input type="file" id="incidentPhoto" accept="image/*" onchange="previewImage(this)" style="padding:10px;">
+          <div id="imagePreviewContainer" style="margin-top:15px;display:none;text-align:center;">
+            <img id="imagePreview" src="#" style="max-width:100%;height:200px;border-radius:8px;border:2px solid #eee;">
+            <p style="font-size:13px;color:#28a745;font-weight:bold;margin-top:8px;">✅ Photo selected.</p>
+          </div>
+        </div>
+      </div><div class="form-actions">
+        <button class="btn btn-primary" onclick="saveIncident()">💾 Save</button>
+        <button class="btn btn-warning" onclick="saveIncident(true)">☁️ Save & Sync</button>
+      </div></div>
+      <div class="table-card"><h3>📋 Incident Register (${incidents.length})</h3><div class="table-wrapper"><table>
+        <thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Location</th><th>Description</th><th>Severity</th><th>Status</th><th>By</th></tr></thead>
+        <tbody>${incidents.map(function(i){return '<tr><td><strong>'+i.id+'</strong></td><td>'+i.date+'</td><td>'+i.type+'</td><td>'+i.location+'</td><td>'+(i.description||'').substring(0,60)+'...</td><td><span class="status-badge '+(i.severity==='High'||i.severity==='Critical'?'status-unsafe':'status-pending')+'">'+i.severity+'</span></td><td><span class="status-badge '+(i.status==='Closed'?'status-safe':i.status==='Open'?'status-unsafe':'status-pending')+'">'+i.status+'</span></td><td>'+i.reportedBy+'</td></tr>';}).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+  setupAutocomplete('incReportedBy',null);
+  setupAutocomplete('incInjured',null);
+}
+
+async function saveIncident(sync){
+  sync=sync||false;
+  var photoInput=$('incidentPhoto');var photoBase64="";
+  if(photoInput&&photoInput.files.length>0) photoBase64=await fileToBase64(photoInput.files[0]);
+  var record={id:generateId('INC'),date:$('incDate').value,time:$('incTime')?$('incTime').value:'',
+    type:getSelectValue('incType','incTypeOther'),severity:$('incSeverity').value,
+    location:$('incLocation').value,reportedBy:$('incReportedBy').value,
+    injured:$('incInjured')?$('incInjured').value:'',bodyPart:getSelectValue('incBodyPart','incBodyPartOther'),
+    description:$('incDescription').value,rca:$('incRCA')?$('incRCA').value:'',
+    actions:$('incActions')?$('incActions').value:'',status:$('incStatus').value,timestamp:now(),photo:photoBase64};
+  if(!record.type||!record.description){showToast('Fill required fields','error');return;}
+  addRecord('incidents',record);showToast('Incident saved!','success');
+  if(sync){
+    var vals=[record.id,record.date,record.time,record.type,record.severity,record.location,
+      record.reportedBy,record.injured,record.bodyPart,record.description,record.rca,
+      record.actions,record.status,record.timestamp,photoBase64];
+    submitToSheet('Incidents',vals);
+  }
+  renderIncidents();
+}
+
+// ============================================
+// ⚠️ HIRA
+// ============================================
+function renderHIRA(){
+  var data=getStoredData('hira');
+  $('contentArea').innerHTML=`
+    <div class="module-page active">
+      <div class="module-header"><h2>⚠️ HIRA / Risk Assessment</h2><p>5×5 Risk Matrix</p><span class="legal-tag tag-iso">ISO 45001 Clause 6.1</span></div>
+      <div class="form-card"><h3>📊 5×5 Risk Matrix</h3>
+        <div class="risk-matrix">
+          <div class="risk-label">5</div><div class="risk-cell risk-medium">5</div><div class="risk-cell risk-high">10</div><div class="risk-cell risk-extreme">15</div><div class="risk-cell risk-extreme">20</div><div class="risk-cell risk-extreme">25</div>
+          <div class="risk-label">4</div><div class="risk-cell risk-medium">4</div><div class="risk-cell risk-medium">8</div><div class="risk-cell risk-high">12</div><div class="risk-cell risk-extreme">16</div><div class="risk-cell risk-extreme">20</div>
+          <div class="risk-label">3</div><div class="risk-cell risk-low">3</div><div class="risk-cell risk-medium">6</div><div class="risk-cell risk-high">9</div><div class="risk-cell risk-high">12</div><div class="risk-cell risk-extreme">15</div>
+          <div class="risk-label">2</div><div class="risk-cell risk-low">2</div><div class="risk-cell risk-medium">4</div><div class="risk-cell risk-medium">6</div><div class="risk-cell risk-medium">8</div><div class="risk-cell risk-high">10</div>
+          <div class="risk-label">1</div><div class="risk-cell risk-low">1</div><div class="risk-cell risk-low">2</div><div class="risk-cell risk-low">3</div><div class="risk-cell risk-medium">4</div><div class="risk-cell risk-medium">5</div>
+          <div class="risk-label"></div><div class="risk-label">1</div><div class="risk-label">2</div><div class="risk-label">3</div><div class="risk-label">4</div><div class="risk-label">5</div>
+        </div>
+        <div style="display:flex;gap:15px;margin-top:12px;flex-wrap:wrap;font-size:12px;">
+          <span>🟢 1-3: Low</span><span>🟡 4-8: Medium</span><span>🟠 9-12: High</span><span>🔴 15-25: Extreme</span>
+        </div>
+      </div>
+      <div class="form-card"><h3>📝 New Risk Assessment</h3><div class="form-grid">
+        <div class="form-group"><label>Activity *</label><input type="text" id="hiraActivity" placeholder="e.g., Scaffolding"></div>
+        <div class="form-group"><label>Location *</label><input type="text" id="hiraLocation" placeholder="Building C"></div>
+        <div class="form-group full-width"><label>Hazard *</label><textarea id="hiraHazard" placeholder="Describe hazard..."></textarea></div>
+        <div class="form-group"><label>Likelihood (1-5)</label><select id="hiraLikelihood"><option value="1">1-Rare</option><option value="2">2-Unlikely</option><option value="3" selected>3-Possible</option><option value="4">4-Likely</option><option value="5">5-Almost Certain</option></select></div>
+        <div class="form-group"><label>Severity (1-5)</label><select id="hiraSeverity"><option value="1">1-Insignificant</option><option value="2">2-Minor</option><option value="3" selected>3-Moderate</option><option value="4">4-Major</option><option value="5">5-Catastrophic</option></select></div>
+        <div class="form-group"><label>Risk Score</label><input type="text" id="hiraScore" readonly style="background:#f8f9fa;"></div>
+        <div class="form-group full-width"><label>Controls *</label><textarea id="hiraControls" placeholder="Elimination→Substitution→Engineering→Admin→PPE"></textarea></div>
+        <div class="form-group"><label>Res. Likelihood</label><select id="hiraResLikelihood"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+        <div class="form-group"><label>Res. Severity</label><select id="hiraResSeverity"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+        <div class="form-group"><label>Residual Score</label><input type="text" id="hiraResScore" readonly style="background:#f8f9fa;"></div>
+        <div class="form-group"><label>Assessed By</label><input type="text" id="hiraAssessor" value="Mahesh"></div>
+        <div class="form-group"><label>Date</label><input type="date" id="hiraDate" value="${today()}"></div>
+      </div><div class="form-actions">
+        <button class="btn btn-primary" onclick="calcRiskScore()">📊 Calculate</button>
+        <button class="btn btn-success" onclick="saveHIRA()">💾 Save</button>
+        <button class="btn btn-warning" onclick="saveHIRA(true)">☁️ Sync</button>
+      </div></div>
+      <div class="table-card"><h3>📋 Risk Register (${data.length})</h3><div class="table-wrapper"><table>
+        <thead><tr><th>ID</th><th>Activity</th><th>Hazard</th><th>L</th><th>S</th><th>Score</th><th>Level</th><th>Residual</th></tr></thead>
+        <tbody>${data.map(function(h){var lv=h.score>=15?'Extreme':h.score>=9?'High':h.score>=4?'Medium':'Low';var cls=h.score>=15?'status-unsafe':h.score>=9?'status-pending':h.score>=4?'status-due':'status-safe';
+          return '<tr><td><strong>'+h.id+'</strong></td><td>'+h.activity+'</td><td>'+(h.hazard||'').substring(0,40)+'...</td><td>'+h.likelihood+'</td><td>'+h.severity+'</td><td><strong>'+h.score+'</strong></td><td><span class="status-badge '+cls+'">'+lv+'</span></td><td>'+(h.residualScore||'-')+'</td></tr>';}).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+  ['hiraLikelihood','hiraSeverity','hiraResLikelihood','hiraResSeverity'].forEach(function(id){var el=$(id);if(el)el.addEventListener('change',calcRiskScore);});
+}
+
+function calcRiskScore(){
+  var l=parseInt($('hiraLikelihood').value)||0,s=parseInt($('hiraSeverity').value)||0;
+  $('hiraScore').value=(l*s)+' — '+(l*s>=15?'🔴 EXTREME':l*s>=9?'🟠 HIGH':l*s>=4?'🟡 MEDIUM':'🟢 LOW');
+  var rl=parseInt($('hiraResLikelihood').value)||0,rs=parseInt($('hiraResSeverity').value)||0;
+  if($('hiraResScore'))$('hiraResScore').value=(rl*rs)+' — '+(rl*rs>=15?'🔴':rl*rs>=9?'🟠':rl*rs>=4?'🟡':'🟢');
+}
+
+function saveHIRA(sync){
+  sync=sync||false;
+  var l=parseInt($('hiraLikelihood').value),s=parseInt($('hiraSeverity').value),rl=parseInt($('hiraResLikelihood').value),rs=parseInt($('hiraResSeverity').value);
+  var record={id:generateId('HIRA'),activity:$('hiraActivity').value,location:$('hiraLocation').value,hazard:$('hiraHazard').value,likelihood:l,severity:s,score:l*s,controls:$('hiraControls').value,resLikelihood:rl,resSeverity:rs,residualScore:rl*rs,assessor:$('hiraAssessor').value,date:$('hiraDate').value,timestamp:now()};
+  if(!record.activity||!record.hazard){showToast('Fill required fields','error');return;}
+  addRecord('hira',record);showToast('HIRA saved!','success');
+  if(sync)submitToSheet('HIRA',Object.values(record));renderHIRA();
+}
+
+// ============================================
+// 🔍 INSPECTIONS
+// ============================================
+function renderInspections(){
+  var data=getStoredData('inspections');
+  var inspTypes=['Part III — Health','Part IV — Safety','Part V — Welfare','General Workplace','Housekeeping','Scaffolding','Excavation','Electrical','Working at Height','Confined Space','Ladder Inspection','Crane/Lifting Equipment','Fire Safety','Environmental','PPE Compliance','Vehicle/Transport','Chemical Storage','Welding Area','Demolition Site','Night Work','Material Storage','Formwork','Temporary Structures','Road/Traffic Safety','Emergency Equipment'];
+
+  $('contentArea').innerHTML=`
+    <div class="module-page active">
+      <div class="module-header"><h2>🔍 Safety Inspections</h2><p>Factory Ordinance Part III-V</p>
+        <span class="legal-tag tag-factory">Factory Ordinance</span><span class="legal-tag tag-iso">ISO 45001 Clause 9.1</span></div>
+      <div class="form-card"><h3>📝 New Inspection</h3><div class="form-grid">
+        <div class="form-group"><label>Date *</label><input type="date" id="inspDate" value="${today()}"></div>
+        ${buildSelect('inspType',inspTypes,'Inspection Type *')}
+        <div class="form-group"><label>Location *</label><input type="text" id="inspLocation" placeholder="Workshop B"></div>
+        <div class="form-group"><label>Inspector *</label><input type="text" id="inspInspector" value="Mahesh" placeholder="🔍 Type name..."></div>
+        <div class="form-group full-width"><label>Findings *</label><textarea id="inspFindings" placeholder="Findings..."></textarea></div>
+        <div class="form-group full-width"><label>Non-Conformities</label><textarea id="inspNC" placeholder="Non-conformities..."></textarea></div>
+        <div class="form-group full-width"><label>Corrective Actions</label><textarea id="inspActions" placeholder="Actions..."></textarea></div>
+        <div class="form-group"><label>Priority</label><select id="inspPriority"><option>Low</option><option>Medium</option><option selected>High</option><option>Critical</option></select></div>
+        <div class="form-group"><label>Due Date</label><input type="date" id="inspDueDate"></div>
+        <div class="form-group"><label>Status</label><select id="inspStatus"><option>Open</option><option>In Progress</option><option>Closed</option></select></div>
+      </div><div class="form-actions">
+        <button class="btn btn-success" onclick="saveInspection()">💾 Save</button>
+        <button class="btn btn-warning" onclick="saveInspection(true)">☁️ Sync</button>
+      </div></div>
+      <div class="table-card"><h3>📋 Inspection Records (${data.length})</h3><div class="table-wrapper"><table>
+        <thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Location</th><th>Findings</th><th>Priority</th><th>Status</th></tr></thead>
+        <tbody>${data.map(function(r){return '<tr><td><strong>'+r.id+'</strong></td><td>'+r.date+'</td><td>'+r.type+'</td><td>'+r.location+'</td><td>'+(r.findings||'').substring(0,50)+'...</td><td><span class="status-badge '+(r.priority==='Critical'?'status-unsafe':r.priority==='High'?'status-pending':'status-safe')+'">'+r.priority+'</span></td><td><span class="status-badge '+(r.status==='Closed'?'status-safe':'status-pending')+'">'+r.status+'</span></td></tr>';}).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+  setupAutocomplete('inspInspector',null);
+}
+
+function saveInspection(sync){
+  sync=sync||false;
+  var record={id:generateId('INS'),date:$('inspDate').value,type:getSelectValue('inspType','inspTypeOther'),location:$('inspLocation').value,inspector:$('inspInspector').value,findings:$('inspFindings').value,nc:$('inspNC')?$('inspNC').value:'',actions:$('inspActions')?$('inspActions').value:'',priority:$('inspPriority').value,dueDate:$('inspDueDate')?$('inspDueDate').value:'',status:$('inspStatus').value,timestamp:now()};
+  if(!record.date||!record.type||!record.findings){showToast('Fill required fields','error');return;}
+  addRecord('inspections',record);showToast('Inspection saved!','success');
+  if(sync)submitToSheet('Inspections',Object.values(record));renderInspections();
+}
+
+// ============================================
+// 🔧 POWER TOOLS
+// ============================================
+function renderPowerTools(){
+  var data=getStoredData('powerTools');
+  $('contentArea').innerHTML=`
+    <div class="module-page active">
+      <div class="module-header"><h2>🔧 Power Tool Safety</h2><span class="legal-tag tag-iso">ISO 45001 Clause 8.1</span></div>
+      <div class="form-card"><h3>📝 Tool Inspection</h3><div class="form-grid">
+        <div class="form-group"><label>Tool ID *</label><input type="text" id="ptId" placeholder="PT-004"></div>
+        <div class="form-group"><label>Tool Name *</label><input type="text" id="ptName" placeholder="Angle Grinder"></div>
+        <div class="form-group"><label>Voltage</label><select id="ptVoltage"><option>110V</option><option>230V</option><option>415V</option><option>Battery</option></select></div>
+        <div class="form-group"><label>Guard *</label><select id="ptGuard"><option>Good</option><option>Fair</option><option>Damaged</option><option>Missing</option></select></div>
+        <div class="form-group"><label>Cable *</label><select id="ptCable"><option>Good</option><option>Fair</option><option>Damaged</option><option>Exposed Wires</option></select></div>
+        <div class="form-group"><label>ELCB/RCD *</label><select id="ptElcb"><option>Yes</option><option>No</option></select></div>
+        <div class="form-group"><label>PPE *</label><select id="ptPPE"><option>Yes</option><option>No</option><option>Partial</option></select></div>
+        <div class="form-group"><label>Inspection Date</label><input type="date" id="ptInspDate" value="${today()}"></div>
+        <div class="form-group"><label>Next Due</label><input type="date" id="ptNextDue"></div>
+        <div class="form-group"><label>Inspector</label><input type="text" id="ptInspector" value="Mahesh" placeholder="🔍 Type name..."></div>
+        <div class="form-group full-width"><label>Remarks</label><textarea id="ptRemarks" placeholder="Observations..."></textarea></div>
+      </div><div class="form-actions">
+        <button class="btn btn-success" onclick="savePowerTool()">💾 Save</button>
+        <button class="btn btn-warning" onclick="savePowerTool(true)">☁️ Sync</button>
+      </div></div>
+      <div class="table-card"><h3>📋 Power Tool Register (${data.length})</h3><div class="table-wrapper"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>V</th><th>Guard</th><th>Cable</th><th>ELCB</th><th>PPE</th><th>Inspected</th><th>Next</th><th>Status</th></tr></thead>
+        <tbody>${data.map(function(t){return '<tr><td><strong>'+t.id+'</strong></td><td>'+t.name+'</td><td>'+t.voltage+'</td><td>'+t.guardCondition+'</td><td>'+t.cableCondition+'</td><td>'+t.elcb+'</td><td>'+t.ppe+'</td><td>'+t.lastInspection+'</td><td>'+t.nextDue+'</td><td><span class="status-badge '+(t.status==='SAFE'?'status-safe':'status-unsafe')+'">'+t.status+'</span></td></tr>';}).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+  setupAutocomplete('ptInspector',null);
+}
+
+function savePowerTool(sync){
+  sync=sync||false;
+  var g=$('ptGuard').value,c=$('ptCable').value,e=$('ptElcb').value;
+  var isCritical=g==='Damaged'||g==='Missing'||c==='Exposed Wires'||c==='Damaged'||e==='No';
+  var record={id:$('ptId').value||generateId('PT'),name:$('ptName').value,voltage:$('ptVoltage').value,guardCondition:g,cableCondition:c,elcb:e,ppe:$('ptPPE').value,lastInspection:$('ptInspDate').value,nextDue:$('ptNextDue')?$('ptNextDue').value:'',inspector:$('ptInspector').value,remarks:$('ptRemarks')?$('ptRemarks').value:'',status:isCritical?'UNSAFE':'SAFE',timestamp:now()};
+  if(!record.name){showToast('Tool name required','error');return;}
+  addRecord('powerTools',record);
+  showToast(isCritical?'⚠️ TOOL UNSAFE!':'Tool saved!',isCritical?'error':'success');
+  if(sync)submitToSheet('PowerTools',Object.values(record));renderPowerTools();
+}
+
+// ============================================
+// 🧯 FIRE EQUIPMENT
+// ============================================
+function renderFireEquipment(){
+  var data=getStoredData('fireEquipment');
+  var feTypes=['CO2','DCP (Dry Chemical Powder)','Foam (AFFF)','Water','Wet Chemical','Clean Agent (FM200)','Clean Agent (Novec 1230)','K-Class (Kitchen)','D-Class (Metal)','Halon','Automatic Fire Suppression','Fire Blanket','Fire Bucket (Sand)','Fire Bucket (Water)'];
+  var feCapacities=['1kg','2kg','3kg','4.5kg','5kg','6kg','9kg','10kg','12kg','25kg','50kg (Trolley)','2L','4.5L','6L','9L','25L','45L','50L','75L','100L','Automatic System'];
+
+  $('contentArea').innerHTML=`
+    <div class="module-page active">
+      <div class="module-header"><h2>🧯 Fire Equipment Register</h2><span class="legal-tag tag-iso">ISO 45001 Clause 8.2</span></div>
+      <div class="form-card"><h3>📝 Add/Inspect Fire Extinguisher</h3><div class="form-grid">
+        <div class="form-group"><label>ID *</label><input type="text" id="feId" placeholder="FE-005"></div>
+        ${buildSelect('feType',feTypes,'Type *')}
+        ${buildSelect('feCapacity',feCapacities,'Capacity *')}
+        <div class="form-group"><label>Location *</label><input type="text" id="feLocation" placeholder="Workshop A"></div>
+        <div class="form-group"><label>Install Date</label><input type="date" id="feInstallDate"></div>
+        <div class="form-group"><label>Expiry *</label><input type="date" id="feExpiry"></div>
+        <div class="form-group"><label>Last Inspection</label><input type="date" id="feLastInsp" value="${today()}"></div>
+        <div class="form-group"><label>Next Due *</label><input type="date" id="feNextDue"></div>
+        <div class="form-group"><label>Pressure</label><select id="fePressure"><option>Green Zone (OK)</option><option>Red Zone (Low)</option><option>Overcharged</option><option>No Gauge</option></select></div>
+        <div class="form-group"><label>Pin & Seal</label><select id="fePin"><option>Intact</option><option>Missing</option><option>Damaged</option></select></div>
+        <div class="form-group"><label>Hose</label><select id="feHose"><option>Good</option><option>Cracked</option><option>Missing</option></select></div>
+        <div class="form-group"><label>Status *</label><select id="feStatus"><option>Serviceable</option><option>Recharge Required</option><option>Expired</option><option>Out of Service</option></select></div>
+        <div class="form-group"><label>Inspector</label><input type="text" id="feInspector" value="Mahesh" placeholder="🔍 Type name..."></div>
+        <div class="form-group full-width"><label>Remarks</label><textarea id="feRemarks" placeholder="Observations..."></textarea></div>
+      </div><div class="form-actions">
+        <button class="btn btn-success" onclick="saveFireEquipment()">💾 Save</button>
+        <button class="btn btn-warning" onclick="saveFireEquipment(true)">☁️ Sync</button>
+      </div></div>
+      <div class="stats-grid">
+        <div class="stat-card green"><div class="stat-value">${data.filter(function(f){return f.status==='Serviceable';}).length}</div><div class="stat-label">Serviceable</div></div>
+        <div class="stat-card orange"><div class="stat-value">${data.filter(function(f){return f.status==='Recharge Required';}).length}</div><div class="stat-label">Recharge</div></div>
+        <div class="stat-card red"><div class="stat-value">${data.filter(function(f){return f.status==='Expired';}).length}</div><div class="stat-label">Expired</div></div>
+        <div class="stat-card blue"><div class="stat-value">${data.length}</div><div class="stat-label">Total</div></div>
+      </div>
+      <div class="table-card"><h3>📋 Register (${data.length})</h3><div class="table-wrapper"><table>
+        <thead><tr><th>ID</th><th>Type</th><th>Cap.</th><th>Location</th><th>Expiry</th><th>Next Due</th><th>Status</th></tr></thead>
+        <tbody>${data.map(function(f){return '<tr><td><strong>'+f.id+'</strong></td><td>'+f.type+'</td><td>'+f.capacity+'</td><td>'+f.location+'</td><td>'+(f.expiryDate||'-')+'</td><td>'+(f.nextDue||'-')+'</td><td><span class="status-badge '+(f.status==='Serviceable'?'status-safe':f.status==='Expired'?'status-expired':'status-pending')+'">'+f.status+'</span></td></tr>';}).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+  setupAutocomplete('feInspector',null);
+}
+
+function saveFireEquipment(sync){
+  sync=sync||false;
+  var record={id:$('feId').value||generateId('FE'),type:getSelectValue('feType','feTypeOther'),capacity:getSelectValue('feCapacity','feCapacityOther'),location:$('feLocation').value,installDate:$('feInstallDate')?$('feInstallDate').value:'',expiryDate:$('feExpiry')?$('feExpiry').value:'',lastInspection:$('feLastInsp').value,nextDue:$('feNextDue')?$('feNextDue').value:'',pressure:$('fePressure').value,pin:$('fePin').value,hose:$('feHose').value,status:$('feStatus').value,inspector:$('feInspector').value,remarks:$('feRemarks')?$('feRemarks').value:'',timestamp:now()};
+  if(!record.location||!record.type){showToast('Fill required fields','error');return;}
+  addRecord('fireEquipment',record);showToast('Fire equipment saved!','success');
+  if(sync)submitToSheet('FireEquipment',Object.values(record));renderFireEquipment();
+}
+
+// ============================================
+// 🚒 FIRE HYDRANT
+// ============================================
+function renderFireHydrant(){
+  var data=getStoredData('fireHydrants');
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>🚒 Hydrant & Hose Reel</h2></div>
+    <div class="form-card"><h3>📝 Inspection</h3><div class="form-grid">
+      <div class="form-group"><label>ID *</label><input type="text" id="fhId" placeholder="HYD-001"></div>
+      <div class="form-group"><label>Type *</label><select id="fhType"><option>Fire Hydrant</option><option>Hose Reel</option><option>Wet Riser</option><option>Dry Riser</option></select></div>
+      <div class="form-group"><label>Location *</label><input type="text" id="fhLocation" placeholder="Ground Floor"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="fhDate" value="${today()}"></div>
+      <div class="form-group"><label>Pressure *</label><select id="fhPressure"><option>Pass</option><option>Fail</option><option>Not Tested</option></select></div>
+      <div class="form-group"><label>Hose *</label><select id="fhHose"><option>Good</option><option>Fair</option><option>Damaged</option><option>Missing</option></select></div>
+      <div class="form-group"><label>Valve *</label><select id="fhValve"><option>Operational</option><option>Stiff</option><option>Leaking</option><option>Stuck</option></select></div>
+      <div class="form-group"><label>Access *</label><select id="fhAccess"><option>Clear</option><option>Partially Obstructed</option><option>Blocked</option></select></div>
+      <div class="form-group"><label>Obstruction</label><select id="fhObstruction"><option>No Obstruction</option><option>Minor</option><option>Major</option></select></div>
+      <div class="form-group"><label>Nozzle</label><select id="fhNozzle"><option>Good</option><option>Damaged</option><option>Missing</option></select></div>
+      <div class="form-group"><label>Signage</label><select id="fhSignage"><option>Yes</option><option>Faded</option><option>Missing</option></select></div>
+      <div class="form-group"><label>Status</label><select id="fhStatus"><option>Serviceable</option><option>Needs Repair</option><option>Out of Service</option></select></div>
+      <div class="form-group"><label>Inspector</label><input type="text" id="fhInspector" value="Mahesh" placeholder="🔍 Type name..."></div>
+      <div class="form-group full-width"><label>Remarks</label><textarea id="fhRemarks"></textarea></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="saveFireHydrant()">💾 Save</button>
+      <button class="btn btn-warning" onclick="saveFireHydrant(true)">☁️ Sync</button>
+    </div></div>
+    <div class="table-card"><h3>📋 Register (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Type</th><th>Location</th><th>Pressure</th><th>Status</th></tr></thead>
+      <tbody>${data.map(function(r){return '<tr><td><strong>'+r.id+'</strong></td><td>'+r.type+'</td><td>'+r.location+'</td><td><span class="status-badge '+(r.pressure==='Pass'?'status-safe':'status-unsafe')+'">'+r.pressure+'</span></td><td><span class="status-badge '+(r.status==='Serviceable'?'status-safe':'status-unsafe')+'">'+r.status+'</span></td></tr>';}).join('')}</tbody>
+    </table></div></div></div>`;
+  setupAutocomplete('fhInspector',null);
+}
+
+function saveFireHydrant(sync){
+  sync=sync||false;
+  var record={id:$('fhId').value||generateId('HYD'),type:$('fhType').value,location:$('fhLocation').value,date:$('fhDate').value,pressure:$('fhPressure').value,hose:$('fhHose').value,valve:$('fhValve').value,access:$('fhAccess').value,obstruction:$('fhObstruction')?$('fhObstruction').value:'',nozzle:$('fhNozzle')?$('fhNozzle').value:'',signage:$('fhSignage')?$('fhSignage').value:'',status:$('fhStatus').value,inspector:$('fhInspector').value,remarks:$('fhRemarks')?$('fhRemarks').value:'',timestamp:now()};
+  addRecord('fireHydrants',record);showToast('Saved!','success');
+  if(sync)submitToSheet('FireHydrants',Object.values(record));renderFireHydrant();
+}
+
+// ============================================
+// 🔔 FIRE ALARM
+// ============================================
+function renderFireAlarm(){
+  var data=getStoredData('fireAlarms');
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>🔔 Fire Alarm & Detection</h2></div>
+    <div class="form-card"><h3>📝 Inspection</h3><div class="form-grid">
+      <div class="form-group"><label>ID *</label><input type="text" id="faId" placeholder="SD-001"></div>
+      <div class="form-group"><label>Type *</label><select id="faType"><option>Smoke Detector</option><option>Heat Detector</option><option>Manual Call Point</option><option>Control Panel</option><option>Sounder/Bell</option><option>Strobe Light</option></select></div>
+      <div class="form-group"><label>Zone *</label><input type="text" id="faLocation" placeholder="Zone A - Floor 2"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="faDate" value="${today()}"></div>
+      <div class="form-group"><label>Func. Test *</label><select id="faFuncTest"><option>Pass</option><option>Fail</option><option>Not Tested</option></select></div>
+      <div class="form-group"><label>Condition</label><select id="faCondition"><option>Good</option><option>Damaged</option><option>Dirty/Obstructed</option><option>Missing</option></select></div>
+      <div class="form-group"><label>Panel</label><select id="faPanelStatus"><option>Normal</option><option>Fault</option><option>Alarm Active</option><option>Disabled</option><option>N/A</option></select></div>
+      <div class="form-group"><label>Battery</label><select id="faBattery"><option>Good</option><option>Low</option><option>Dead</option><option>N/A</option></select></div>
+      <div class="form-group"><label>Battery Replaced</label><input type="date" id="faBatteryDate"></div>
+      <div class="form-group"><label>Status</label><select id="faStatus"><option>Operational</option><option>Fault</option><option>Out of Service</option></select></div>
+      <div class="form-group"><label>Inspector</label><input type="text" id="faInspector" value="Mahesh" placeholder="🔍 Type name..."></div>
+      <div class="form-group full-width"><label>Remarks</label><textarea id="faRemarks"></textarea></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="saveFireAlarm()">💾 Save</button>
+      <button class="btn btn-warning" onclick="saveFireAlarm(true)">☁️ Sync</button>
+    </div></div>
+    <div class="table-card"><h3>📋 Register (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Type</th><th>Zone</th><th>Test</th><th>Battery</th><th>Status</th></tr></thead>
+      <tbody>${data.map(function(r){return '<tr><td><strong>'+r.id+'</strong></td><td>'+r.type+'</td><td>'+r.location+'</td><td><span class="status-badge '+(r.funcTest==='Pass'?'status-safe':'status-unsafe')+'">'+r.funcTest+'</span></td><td>'+r.battery+'</td><td><span class="status-badge '+(r.status==='Operational'?'status-safe':'status-unsafe')+'">'+r.status+'</span></td></tr>';}).join('')}</tbody>
+    </table></div></div></div>`;
+  setupAutocomplete('faInspector',null);
+}
+
+function saveFireAlarm(sync){
+  sync=sync||false;
+  var record={id:$('faId').value||generateId('FA'),type:$('faType').value,location:$('faLocation').value,date:$('faDate').value,funcTest:$('faFuncTest').value,condition:$('faCondition').value,panelStatus:$('faPanelStatus').value,battery:$('faBattery').value,batteryDate:$('faBatteryDate')?$('faBatteryDate').value:'',status:$('faStatus').value,inspector:$('faInspector').value,remarks:$('faRemarks')?$('faRemarks').value:'',timestamp:now()};
+  addRecord('fireAlarms',record);showToast('Saved!','success');
+  if(sync)submitToSheet('FireAlarms',Object.values(record));renderFireAlarm();
+}
+
+// ============================================
+// 🏃 FIRE DRILL
+// ============================================
+function renderFireDrill(){
+  var data=getStoredData('fireDrills');
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>🏃 Fire Drill Management</h2></div>
+    <div class="form-card"><h3>📝 Record Drill</h3><div class="form-grid">
+      <div class="form-group"><label>Date *</label><input type="date" id="fdDate" value="${today()}"></div>
+      <div class="form-group"><label>Time</label><input type="time" id="fdTime"></div>
+      <div class="form-group"><label>Type *</label><select id="fdType"><option>Full Evacuation</option><option>Partial Evacuation</option><option>Desktop Exercise</option><option>Fire Warden Drill</option><option>Night Shift</option><option>Unannounced</option></select></div>
+      <div class="form-group"><label>Location *</label><input type="text" id="fdLocation" placeholder="Main Building"></div>
+      <div class="form-group"><label>Occupants</label><input type="number" id="fdOccupants"></div>
+      <div class="form-group"><label>Participants</label><input type="number" id="fdParticipants"></div>
+      <div class="form-group"><label>Participation %</label><input type="text" id="fdParticipation" readonly style="background:#f8f9fa;"></div>
+      <div class="form-group"><label>Evac. Time *</label><input type="text" id="fdEvacTime" placeholder="4 min 30 sec"></div>
+      <div class="form-group"><label>Assembly Point</label><input type="text" id="fdAssembly" placeholder="Point A"></div>
+      <div class="form-group"><label>Wardens</label><select id="fdWardens"><option>All Present</option><option>Partially Present</option><option>Absent</option></select></div>
+      <div class="form-group"><label>Alarm</label><select id="fdAlarm"><option>Automatic</option><option>Manual</option><option>Verbal/Whistle</option></select></div>
+      <div class="form-group"><label>Coordinator</label><input type="text" id="fdCoordinator" value="Mahesh" placeholder="🔍 Type name..."></div>
+      <div class="form-group full-width"><label>Observations *</label><textarea id="fdObservations"></textarea></div>
+      <div class="form-group full-width"><label>Actions</label><textarea id="fdActions"></textarea></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="saveFireDrill()">💾 Save</button>
+      <button class="btn btn-warning" onclick="saveFireDrill(true)">☁️ Sync</button>
+    </div></div>
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-value">${data.length}</div><div class="stat-label">Total Drills</div></div>
+      <div class="stat-card blue"><div class="stat-value">${data.length>0?Math.round(data.reduce(function(s,d){return s+parseInt(d.participation||0);},0)/data.length):0}%</div><div class="stat-label">Avg Participation</div></div>
+    </div>
+    <div class="table-card"><h3>📋 Drill Log (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Part. %</th><th>Evac Time</th><th>Observations</th></tr></thead>
+      <tbody>${data.map(function(d){return '<tr><td><strong>'+d.id+'</strong></td><td>'+d.date+'</td><td>'+d.type+'</td><td><strong>'+d.participation+'%</strong></td><td>'+d.evacuationTime+'</td><td>'+(d.observations||'').substring(0,50)+'...</td></tr>';}).join('')}</tbody>
+    </table></div></div></div>`;
+  ['fdOccupants','fdParticipants'].forEach(function(id){var el=$(id);if(el)el.addEventListener('input',function(){var o=parseInt($('fdOccupants').value)||0,p=parseInt($('fdParticipants').value)||0;if(o>0)$('fdParticipation').value=Math.round((p/o)*100)+'%';});});
+  setupAutocomplete('fdCoordinator',null);
+}
+
+function saveFireDrill(sync){
+  sync=sync||false;
+  var o=parseInt($('fdOccupants')?$('fdOccupants').value:0)||0,p=parseInt($('fdParticipants')?$('fdParticipants').value:0)||0;
+  var record={id:generateId('FD'),date:$('fdDate').value,time:$('fdTime')?$('fdTime').value:'',type:$('fdType').value,location:$('fdLocation')?$('fdLocation').value:'',occupants:o,participants:p,participation:o>0?Math.round((p/o)*100):'',evacuationTime:$('fdEvacTime').value,assembly:$('fdAssembly')?$('fdAssembly').value:'',wardens:$('fdWardens')?$('fdWardens').value:'',alarm:$('fdAlarm')?$('fdAlarm').value:'',coordinator:$('fdCoordinator')?$('fdCoordinator').value:'',observations:$('fdObservations').value,actions:$('fdActions')?$('fdActions').value:'',timestamp:now()};
+  if(!record.date||!record.evacuationTime){showToast('Fill required fields','error');return;}
+  addRecord('fireDrills',record);showToast('Drill saved!','success');
+  if(sync)submitToSheet('FireDrills',Object.values(record));renderFireDrill();
+}
+
+// ============================================
+// 🆘 EMERGENCY
+// ============================================
+function renderEmergency(){
+  var contacts=getStoredData('emergencyContacts');
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>🆘 Emergency Preparedness</h2></div>
+    <div class="form-card"><h3>📞 Emergency Contact</h3><div class="form-grid">
+      <div class="form-group"><label>Name *</label><input type="text" id="ecName" placeholder="🔍 Type name..."></div>
+      <div class="form-group"><label>Role *</label><input type="text" id="ecRole"></div>
+      <div class="form-group"><label>Phone *</label><input type="tel" id="ecPhone"></div>
+      <div class="form-group"><label>Alt. Phone</label><input type="tel" id="ecAltPhone"></div>
+      <div class="form-group"><label>Category</label><select id="ecCategory"><option>Fire Service</option><option>Ambulance</option><option>Police</option><option>Hospital</option><option>Management</option><option>HSE Team</option><option>First Aider</option><option>Fire Warden</option><option>Other</option></select></div>
+      <div class="form-group"><label>Priority</label><select id="ecPriority"><option>Primary</option><option>Secondary</option><option>Backup</option></select></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="saveEmergencyContact()">💾 Add</button>
+      <button class="btn btn-warning" onclick="saveEmergencyContact(true)">☁️ Sync</button>
+    </div></div>
+    <div class="table-card"><h3>📋 Contacts (${contacts.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>Name</th><th>Role</th><th>Category</th><th>Phone</th><th>Priority</th></tr></thead>
+      <tbody>${contacts.map(function(c){return '<tr><td><strong>'+c.name+'</strong></td><td>'+c.role+'</td><td>'+c.category+'</td><td>'+c.phone+'</td><td><span class="status-badge '+(c.priority==='Primary'?'status-unsafe':'status-pending')+'">'+c.priority+'</span></td></tr>';}).join('')}</tbody>
+    </table></div></div></div>`;
+  setupAutocomplete('ecName',function(person){
+    if(person.phone) setFieldValue('ecPhone',person.phone);
+    if(person.designation) setFieldValue('ecRole',person.designation);
+  });
+}
+
+function saveEmergencyContact(sync){
+  sync=sync||false;
+  var record={id:generateId('EC'),name:$('ecName').value,role:$('ecRole').value,phone:$('ecPhone').value,altPhone:$('ecAltPhone')?$('ecAltPhone').value:'',category:$('ecCategory').value,priority:$('ecPriority').value,timestamp:now()};
+  if(!record.name||!record.phone){showToast('Name and phone required','error');return;}
+  addRecord('emergencyContacts',record);showToast('Contact added!','success');
+  if(sync)submitToSheet('EmergencyContacts',Object.values(record));renderEmergency();
+}
+// ============================================
+// 📚 TRAINING — 🆕 FIXED: Toolbox Talk REMOVED from dropdown
+// ============================================
+function renderTraining(){
+  var data=getStoredData('trainings');
+  // 🆕 "Toolbox Talk" REMOVED from this list — it's now in Briefing module
+  var trTypes=['Induction','Classroom','Practical','Online','Fire Safety','First Aid','Certification','Refresher','Working at Height','Confined Space','Scaffolding Safety','Electrical Safety','Chemical Handling','Excavation Safety','Crane/Lifting Operations','PPE Usage','Emergency Response','Environmental Awareness','Manual Handling','Incident Investigation','Risk Assessment','Permit to Work','Road Safety','Heat Stress','Noise Awareness','Welding Safety','Demolition Safety'];
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>📚 Training Management</h2>
+      <p>Record formal training sessions. <strong>💡 Toolbox Talks → use "📢 Toolbox Talk / Briefing" module</strong></p>
+      <span class="legal-tag tag-iso">ISO 45001 Clause 7.2</span></div>
+    <div class="form-card"><h3>📝 Record Training</h3><div class="form-grid">
+      <div class="form-group"><label>Date *</label><input type="date" id="trDate" value="${today()}"></div>
+      <div class="form-group"><label>Title *</label><input type="text" id="trTitle" placeholder="Working at Heights"></div>
+      ${buildSelect('trType',trTypes,'Training Type *')}
+      <div class="form-group"><label>Trainer</label><input type="text" id="trTrainer" placeholder="🔍 Type name..."></div>
+      <div class="form-group"><label>Duration (hrs)</label><input type="number" id="trDuration"></div>
+      <div class="form-group"><label>Attendees</label><input type="number" id="trAttendees"></div>
+      <div class="form-group full-width"><label>Topics</label><textarea id="trTopics"></textarea></div>
+      <div class="form-group"><label>Status</label><select id="trStatus"><option>Completed</option><option>Scheduled</option><option>Cancelled</option></select></div>
+      <div class="form-group full-width" style="border:1px dashed #2a9d8f;padding:15px;border-radius:8px;">
+        <label style="color:#2a9d8f;font-weight:bold;">📸 Training Photo:</label>
+        <input type="file" id="trainingPhoto" accept="image/*" onchange="previewTrainingImage(this)" style="padding:10px;">
+        <div id="trImagePreviewContainer" style="margin-top:15px;display:none;text-align:center;">
+          <img id="trImagePreview" src="#" style="max-width:100%;height:200px;border-radius:8px;border:2px solid #eee;">
+          <p style="font-size:13px;color:#2a9d8f;font-weight:bold;margin-top:8px;">✅ Photo selected.</p>
+        </div>
+      </div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="saveTraining()">💾 Save</button>
+      <button class="btn btn-warning" onclick="saveTraining(true)">☁️ Sync</button>
+    </div></div>
+
+    <!-- 🆕 Info banner directing to Briefing module -->
+    <div class="form-card" style="background:linear-gradient(135deg,#f0f7ff,#e3f2fd);border:2px solid var(--info);">
+      <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+        <span style="font-size:36px;">📢</span>
+        <div>
+          <h3 style="margin:0;color:var(--info);">Looking for Toolbox Talks?</h3>
+          <p style="margin:5px 0 0;font-size:13px;color:var(--text-muted);">
+            Toolbox Talks and Daily Briefings are now managed in the dedicated 
+            <strong>"📢 Toolbox Talk / Briefing"</strong> module with photo upload, 
+            attendee tracking, and auto-suggest features.
+          </p>
+        </div>
+        <button class="btn btn-primary" onclick="document.querySelector('[data-page=briefing]').click();" style="white-space:nowrap;">
+          📢 Go to Toolbox Talk
+        </button>
+      </div>
+    </div>
+
+    <div class="table-card"><h3>📋 Training Register (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Date</th><th>Title</th><th>Type</th><th>Trainer</th><th>Attendees</th><th>Status</th></tr></thead>
+      <tbody>${data.map(function(t){return '<tr><td><strong>'+t.id+'</strong></td><td>'+t.date+'</td><td>'+t.title+'</td><td>'+t.type+'</td><td>'+(t.trainer||'-')+'</td><td>'+(t.attendees||'-')+'</td><td><span class="status-badge '+(t.status==='Completed'?'status-safe':'status-pending')+'">'+t.status+'</span></td></tr>';}).join('')}</tbody>
+    </table></div></div></div>`;
+  setupAutocomplete('trTrainer',null);
+}
+
+async function saveTraining(sync){
+  sync=sync||false;
+  var photoInput=$('trainingPhoto');var photoBase64="";
+  if(photoInput&&photoInput.files.length>0) photoBase64=await fileToBase64(photoInput.files[0]);
+  var id=generateId('TR');
+  var sheetData=[id,$('trDate').value,$('trTitle').value,getSelectValue('trType','trTypeOther'),$('trTrainer')?$('trTrainer').value:'',$('trDuration')?$('trDuration').value:'',$('trAttendees')?$('trAttendees').value:'',$('trTopics')?$('trTopics').value:'',$('trStatus').value,now(),photoBase64];
+  var record={id:sheetData[0],date:sheetData[1],title:sheetData[2],type:sheetData[3],trainer:sheetData[4],duration:sheetData[5],attendees:sheetData[6],topics:sheetData[7],status:sheetData[8],timestamp:sheetData[9],photo:sheetData[10]};
+  if(!record.title){showToast('Title required','error');return;}
+  addRecord('trainings',record);showToast('Training saved!','success');
+  if(sync)submitToSheet('Training',sheetData);renderTraining();
+}
+
+// ============================================
+// 📢 TOOLBOX TALK / DAILY BRIEFING — 🆕 ENHANCED with PHOTO
+// ============================================
+function renderBriefing(){
+  var data=getStoredData('briefings');
+  var td=today();
+  var todayBriefings=data.filter(function(b){return b.date===td;});
+  briefingAttendees=[];
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>📢 Toolbox Talk / Daily Safety Briefing</h2>
+      <p>Record daily briefings with photo evidence & attendees — <strong>🔍 Name type කරන්න, suggest වෙනවා!</strong></p>
+      <span class="legal-tag tag-iso">ISO 45001 Clause 7.3</span>
+      <span class="legal-tag tag-factory">Factory Ordinance — Communication</span>
+    </div>
+
+    <!-- 🆕 ENHANCED Stats with Attendance Priority -->
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-icon">📢</div><div class="stat-value">${todayBriefings.length}</div><div class="stat-label">Today's Briefings</div></div>
+      <div class="stat-card blue"><div class="stat-icon">👥</div><div class="stat-value">${todayBriefings.reduce(function(s,b){return s+(b.attendeeCount||0);},0)}</div><div class="stat-label">Today's Attendees</div></div>
+      <div class="stat-card orange"><div class="stat-icon">📋</div><div class="stat-value">${data.length}</div><div class="stat-label">Total Briefings</div></div>
+      <div class="stat-card blue"><div class="stat-icon">📊</div><div class="stat-value">${data.length>0?Math.round(data.reduce(function(s,b){return s+(b.attendeeCount||0);},0)/data.length):0}</div><div class="stat-label">Avg Attendees</div></div>
+    </div>
+
+    <!-- 🆕 ATTENDANCE SECTION — MOVED TO TOP (Priority) -->
+    <div class="form-card" style="border:2px solid var(--info);background:linear-gradient(135deg,#f8fbff,#f0f7ff);">
+      <h3 style="color:var(--info);">👥 Toolbox Talk Attendance — Add Attendees First!</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:15px;">🔍 Name type කරන්න, auto-suggest වෙනවා. Select කරලා ➕ Add button click කරන්න.</p>
+      
+      <div class="form-grid" style="grid-template-columns:1fr 1fr auto;">
+        <div class="form-group"><label>Search & Add Attendee 🔍</label><input type="text" id="brAttendeeName" placeholder="🔍 Type name to search..."></div>
+        <div class="form-group"><label>Company/Dept</label><input type="text" id="brAttendeeCompany" placeholder="Auto-fills on select"></div>
+        <div class="form-group" style="justify-content:flex-end;">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" onclick="addBriefingAttendee()" style="white-space:nowrap;">➕ Add</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-dark);">
+          ✅ Attendees Added: <span id="brAttendeeCount" style="color:var(--info);font-size:16px;">0</span>
+        </label>
+        <div class="attendee-tags" id="brAttendeeList">
+          <span class="attendee-empty">No attendees added. Type a name above to search & add.</span>
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top:10px;">
+        <button class="btn btn-secondary" onclick="briefingAttendees=[];renderBriefingAttendees();">🗑️ Clear All Attendees</button>
+      </div>
+    </div>
+
+    <!-- Briefing Details Form -->
+    <div class="form-card"><h3>📝 Briefing / Toolbox Talk Details</h3>
+      <div class="form-grid">
+        <div class="form-group"><label>Date *</label><input type="date" id="brDate" value="${td}"></div>
+        <div class="form-group"><label>Time *</label><input type="time" id="brTime" value="07:00"></div>
+        <div class="form-group"><label>Topic *</label><input type="text" id="brTopic" placeholder="e.g., Working at Height Safety"></div>
+        <div class="form-group"><label>Type</label><select id="brType">
+          <option>Toolbox Talk</option><option>Safety Briefing</option><option>Morning Brief</option>
+          <option>Pre-Task Brief</option><option>Weekly Safety Meeting</option><option>Emergency Brief</option>
+          <option>Method Statement Brief</option><option>Hazard Alert</option><option>Other</option>
+        </select></div>
+        <div class="form-group"><label>Conducted By * 🔍</label><input type="text" id="brConductor" value="Mahesh" placeholder="🔍 Type name..."></div>
+        <div class="form-group"><label>Location *</label><input type="text" id="brLocation" placeholder="Site Office / Block A"></div>
+        <div class="form-group"><label>Duration (min)</label><input type="number" id="brDuration" value="15"></div>
+        <div class="form-group"><label>Status</label><select id="brStatus"><option>Completed</option><option>Scheduled</option><option>Cancelled</option></select></div>
+        <div class="form-group full-width"><label>Key Points Discussed *</label><textarea id="brKeyPoints" placeholder="Key safety points discussed during the briefing..."></textarea></div>
+        <div class="form-group full-width"><label>Actions Required</label><textarea id="brActions" placeholder="Follow-up actions from this briefing..."></textarea></div>
+
+        <!-- 🆕 PHOTO UPLOAD — NEW FEATURE -->
+        <div class="form-group full-width">
+          <div class="photo-upload-box">
+            <label>📸 Briefing / Toolbox Talk Photo Evidence:</label>
+            <p style="font-size:11px;color:var(--text-muted);margin:5px 0 10px;">Capture the briefing session, attendance board, or safety topic being discussed.</p>
+            <input type="file" id="briefingPhoto" accept="image/*" capture="environment" onchange="previewBriefingImage(this)" style="padding:10px;">
+            <div class="photo-preview" id="brImagePreviewContainer">
+              <img id="brImagePreview" src="#" alt="Briefing Photo">
+              <p class="photo-success">✅ Photo captured successfully!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions" style="margin-top:20px;">
+        <button class="btn btn-success" onclick="saveBriefing()">💾 Save Briefing</button>
+        <button class="btn btn-warning" onclick="saveBriefing(true)">☁️ Save & Sync to Sheet</button>
+      </div>
+    </div>
+
+    <!-- 🆕 Today's Briefing Summary -->
+    ${todayBriefings.length>0?'<div class="form-card"><h3>📋 Today\'s Briefings ('+todayBriefings.length+')</h3>'+todayBriefings.map(function(b){return '<div style="padding:12px;background:var(--body-bg);border-radius:8px;margin-bottom:10px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"><div><strong style="color:var(--info);">'+b.topic+'</strong><br><span style="font-size:12px;color:var(--text-muted);">'+b.type+' • '+b.time+' • by '+b.conductor+' • '+(b.attendeeCount||0)+' attendees</span></div><span class="status-badge status-safe">'+b.status+'</span></div>'+(b.keyPoints?'<p style="font-size:12px;margin-top:8px;color:var(--text-dark);">📌 '+b.keyPoints.substring(0,100)+'...</p>':'')+'</div>';}).join('')+'</div>':''}
+
+    <!-- Briefing History Table -->
+    <div class="table-card"><h3>📋 Briefing Register — All Records (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Topic</th><th>Type</th><th>Conductor</th><th>Attendees</th><th>Duration</th><th>Photo</th><th>Status</th></tr></thead>
+      <tbody>${data.map(function(b){return '<tr>'+
+        '<td><strong>'+b.id+'</strong></td><td>'+b.date+'</td><td>'+(b.time||'-')+'</td>'+
+        '<td>'+b.topic+'</td><td>'+b.type+'</td><td>'+b.conductor+'</td>'+
+        '<td><strong>'+(b.attendeeCount||0)+'</strong> persons</td>'+
+        '<td>'+(b.duration||'-')+' min</td>'+
+        '<td>'+(b.photo?'<span class="status-badge status-safe">📸</span>':'<span class="status-badge status-pending">—</span>')+'</td>'+
+        '<td><span class="status-badge '+(b.status==='Completed'?'status-safe':'status-pending')+'">'+b.status+'</span></td>'+
+      '</tr>';}).join('')}</tbody>
+    </table></div></div>
+  </div>`;
+
+  // 🔍 AUTOCOMPLETE — Conductor
+  setupAutocomplete('brConductor',null);
+
+  // 🔍 AUTOCOMPLETE — Attendee search
+  setupAutocomplete('brAttendeeName',function(person){
+    setFieldValue('brAttendeeCompany',person.company||person.department||'');
+    window._selectedBrAttendee=person;
+  });
+}
+
+// 👥 Add attendee to briefing list
+function addBriefingAttendee(){
+  var nameEl=$('brAttendeeName');
+  var companyEl=$('brAttendeeCompany');
+  var name=nameEl?nameEl.value.trim():'';
+  if(!name){showToast('Enter attendee name','error');return;}
+
+  // Check duplicate
+  if(briefingAttendees.find(function(a){return a.name.toLowerCase()===name.toLowerCase();})){
+    showToast('Already added!','warning');return;
+  }
+
+  var person=window._selectedBrAttendee||{};
+  briefingAttendees.push({
+    name:name,
+    empId:person.empId||'',
+    nic:person.nic||'',
+    designation:person.designation||person.trade||'',
+    company:companyEl?companyEl.value:person.company||'',
+    type:person.type||'employee'
+  });
+
+  if(nameEl) nameEl.value='';
+  if(companyEl) companyEl.value='';
+  window._selectedBrAttendee=null;
+  renderBriefingAttendees();
+  showToast('✅ '+name+' added!','success');
+  // Focus back to search for quick entry
+  if(nameEl) nameEl.focus();
+}
+
+// 🔄 Render attendee tags
+function renderBriefingAttendees(){
+  var container=$('brAttendeeList');
+  var countEl=$('brAttendeeCount');
+  if(!container)return;
+  if(countEl) countEl.textContent=briefingAttendees.length;
+
+  if(briefingAttendees.length===0){
+    container.innerHTML='<span class="attendee-empty">No attendees added. Type a name above to search & add.</span>';
+    return;
+  }
+
+  container.innerHTML=briefingAttendees.map(function(a,i){
+    return '<div class="attendee-tag">' +
+      (a.type==='subcontractor'?'👷':'👤') + ' ' + a.name +
+      (a.designation?'<small style="color:var(--text-muted);margin-left:2px;">('+a.designation+')</small>':'') +
+      (a.company?'<small style="color:var(--text-muted);margin-left:2px;">• '+a.company+'</small>':'') +
+      '<span class="attendee-remove" onclick="removeBriefingAttendee('+i+')">×</span>' +
+    '</div>';
+  }).join('');
+}
+
+// ❌ Remove attendee
+function removeBriefingAttendee(index){
+  var removed=briefingAttendees.splice(index,1);
+  renderBriefingAttendees();
+  showToast(removed[0].name+' removed','info');
+}
+
+// 💾 Save Briefing — 🆕 WITH PHOTO SUPPORT
+async function saveBriefing(sync){
+  sync=sync||false;
+
+  // 🆕 Photo handling
+  var photoInput=$('briefingPhoto');
+  var photoBase64="";
+  if(photoInput&&photoInput.files.length>0){
+    photoBase64=await fileToBase64(photoInput.files[0]);
+  }
+
+  var record={
+    id:generateId('BR'),
+    date:$('brDate').value,
+    time:$('brTime')?$('brTime').value:'',
+    topic:$('brTopic').value,
+    type:$('brType').value,
+    conductor:$('brConductor').value,
+    location:$('brLocation')?$('brLocation').value:'',
+    duration:$('brDuration')?$('brDuration').value:'',
+    attendees:briefingAttendees.map(function(a){return a.name;}).join(', '),
+    attendeeCount:briefingAttendees.length,
+    attendeesList:briefingAttendees,
+    keyPoints:$('brKeyPoints')?$('brKeyPoints').value:'',
+    actions:$('brActions')?$('brActions').value:'',
+    status:$('brStatus').value,
+    timestamp:now(),
+    photo:photoBase64 ? true : false  // Store flag locally
+  };
+
+  if(!record.topic||!record.conductor){showToast('Topic & Conductor required','error');return;}
+  if(briefingAttendees.length===0){showToast('Add at least one attendee!','warning');return;}
+
+  addRecord('briefings',record);
+  showToast('📢 Briefing saved with '+record.attendeeCount+' attendees'+(photoBase64?' + 📸 Photo':'')+'!','success');
+
+  if(sync){
+    // GS Briefing columns: ID,Date,Time,Topic,Type,Conductor,Location,Duration,Attendees,Attendee Count,Key Points,Actions,Status,Timestamp,Photo URL
+    submitToSheet('Briefing',[
+      record.id,record.date,record.time,record.topic,record.type,record.conductor,
+      record.location,record.duration,record.attendees,record.attendeeCount,
+      record.keyPoints,record.actions,record.status,record.timestamp,
+      photoBase64  // 🆕 Photo sent to GS for Drive upload
+    ]);
+  }
+
+  briefingAttendees=[];
+  renderBriefing();
+}
+
+// ============================================
+// 🦺 PPE MANAGEMENT
+// ============================================
+function renderPPE(){
+  var data=getStoredData('ppeRecords');
+  var ppeItems=['Safety Helmet','Safety Goggles','Face Shield','Welding Helmet','Welding Goggles','Ear Plugs','Ear Muffs','Dust Mask (FFP1)','Dust Mask (FFP2)','Dust Mask (FFP3)','Half-Face Respirator','Full-Face Respirator','SCBA','Safety Gloves (Leather)','Safety Gloves (Rubber)','Safety Gloves (Chemical)','Safety Gloves (Cut Resistant)','Safety Gloves (Heat Resistant)','Safety Gloves (Welding)','Safety Boots (Steel Toe)','Safety Boots (Insulated)','Safety Boots (Chemical Resistant)','Gum Boots','Safety Harness (Full Body)','Safety Harness (Half Body)','Lanyard (Single)','Lanyard (Double)','Self-Retracting Lifeline','High-Vis Vest','High-Vis Jacket','Rain Coat','Coverall','Welding Apron','Chemical Suit','Knee Pads','Arm Sleeves','Bump Cap','Safety Net','Life Jacket','Reflective Tape'];
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>🦺 PPE Management</h2><span class="legal-tag tag-factory">Factory Ordinance Part IV</span></div>
+    <div class="form-card"><h3>📝 PPE Issue/Inspection</h3><div class="form-grid">
+      <div class="form-group"><label>Date *</label><input type="date" id="ppeDate" value="${today()}"></div>
+      <div class="form-group"><label>Employee *</label><input type="text" id="ppeName" placeholder="🔍 Type name to search..."></div>
+      <div class="form-group"><label>Employee ID</label><input type="text" id="ppeEmpId"></div>
+      ${buildSelect('ppeItem',ppeItems,'PPE Item *')}
+      <div class="form-group"><label>Action</label><select id="ppeAction"><option>Issued</option><option>Replaced</option><option>Returned</option><option>Inspection</option></select></div>
+      <div class="form-group"><label>Condition</label><select id="ppeCondition"><option>New</option><option>Good</option><option>Fair</option><option>Worn</option><option>Damaged</option></select></div>
+      <div class="form-group"><label>Qty</label><input type="number" id="ppeQty" value="1"></div>
+      <div class="form-group full-width"><label>Remarks</label><textarea id="ppeRemarks"></textarea></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="savePPE()">💾 Save</button>
+      <button class="btn btn-warning" onclick="savePPE(true)">☁️ Sync</button>
+    </div></div>
+    <div class="table-card"><h3>📋 PPE Register (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Date</th><th>Employee</th><th>Item</th><th>Action</th><th>Condition</th><th>Qty</th></tr></thead>
+      <tbody>${data.map(function(r){return '<tr><td><strong>'+r.id+'</strong></td><td>'+r.date+'</td><td>'+r.name+'</td><td>'+r.item+'</td><td>'+r.action+'</td><td>'+r.condition+'</td><td>'+r.qty+'</td></tr>';}).join('')}</tbody>
+    </table></div></div></div>`;
+  setupAutocomplete('ppeName',function(person){
+    setFieldValue('ppeEmpId',person.empId||person.nic||'');
+  });
+}
+
+function savePPE(sync){
+  sync=sync||false;
+  var record={id:generateId('PPE'),date:$('ppeDate').value,name:$('ppeName').value,empId:$('ppeEmpId')?$('ppeEmpId').value:'',item:getSelectValue('ppeItem','ppeItemOther'),action:$('ppeAction').value,condition:$('ppeCondition').value,qty:$('ppeQty').value,remarks:$('ppeRemarks')?$('ppeRemarks').value:'',timestamp:now()};
+  if(!record.name){showToast('Employee name required','error');return;}
+  addRecord('ppeRecords',record);showToast('PPE saved!','success');
+  if(sync)submitToSheet('PPERecords',Object.values(record));renderPPE();
+}
+
+// ============================================
+// 📋 PERMIT TO WORK
+// ============================================
+function renderPTW(){
+  var data=getStoredData('permits');
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>📋 Permit to Work</h2></div>
+    <div class="form-card"><h3>📝 Issue Permit</h3><div class="form-grid">
+      <div class="form-group"><label>Date *</label><input type="date" id="ptwDate" value="${today()}"></div>
+      <div class="form-group"><label>Valid Until *</label><input type="date" id="ptwValid"></div>
+      <div class="form-group"><label>Type *</label><select id="ptwType"><option>Hot Work</option><option>Working at Height</option><option>Confined Space</option><option>Excavation</option><option>Electrical</option><option>Lifting</option><option>Demolition</option><option>Cold Work</option><option>Radiography</option></select></div>
+      <div class="form-group"><label>Location *</label><input type="text" id="ptwLocation"></div>
+      <div class="form-group"><label>Requester *</label><input type="text" id="ptwRequester" placeholder="🔍 Type name..."></div>
+      <div class="form-group"><label>Contractor</label><input type="text" id="ptwContractor" placeholder="🔍 Type company..."></div>
+      <div class="form-group full-width"><label>Description *</label><textarea id="ptwDescription"></textarea></div>
+      <div class="form-group full-width"><label>Controls</label><textarea id="ptwControls"></textarea></div>
+      <div class="form-group"><label>Authorized By</label><input type="text" id="ptwAuthorizer" value="Mahesh" placeholder="🔍 Type name..."></div>
+      <div class="form-group"><label>Status</label><select id="ptwStatus"><option>Active</option><option>Completed</option><option>Cancelled</option><option>Suspended</option></select></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="savePTW()">💾 Issue</button>
+      <button class="btn btn-warning" onclick="savePTW(true)">☁️ Sync</button>
+    </div></div>
+    <div class="table-card"><h3>📋 Permits (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Location</th><th>Valid</th><th>Requester</th><th>Status</th></tr></thead>
+      <tbody>${data.map(function(p){return '<tr><td><strong>'+p.id+'</strong></td><td>'+p.date+'</td><td>'+p.type+'</td><td>'+p.location+'</td><td>'+p.valid+'</td><td>'+p.requester+'</td><td><span class="status-badge '+(p.status==='Active'?'status-active':p.status==='Completed'?'status-safe':'status-pending')+'">'+p.status+'</span></td></tr>';}).join('')}</tbody>
+    </table></div></div></div>`;
+  setupAutocomplete('ptwRequester',null);
+  setupAutocomplete('ptwContractor',null,'company');
+  setupAutocomplete('ptwAuthorizer',null);
+}
+
+function savePTW(sync){
+  sync=sync||false;
+  var record={id:generateId('PTW'),date:$('ptwDate').value,valid:$('ptwValid').value,type:$('ptwType').value,location:$('ptwLocation').value,requester:$('ptwRequester').value,contractor:$('ptwContractor')?$('ptwContractor').value:'',description:$('ptwDescription').value,controls:$('ptwControls')?$('ptwControls').value:'',authorizer:$('ptwAuthorizer').value,status:$('ptwStatus').value,timestamp:now()};
+  if(!record.type||!record.location||!record.requester){showToast('Fill required fields','error');return;}
+  addRecord('permits',record);showToast('Permit issued!','success');
+  if(sync)submitToSheet('PermitToWork',Object.values(record));renderPTW();
+}
+
+// ============================================
+// 📋 EMPLOYEE ATTENDANCE — With Auto-Fill
+// ============================================
+function renderEmployeeAttendance(){
+  var data=getStoredData('employeeAttendance');var td=today();
+  var tr=data.filter(function(r){return r.date===td;});
+  var pt=tr.filter(function(r){return r.status==='Present'||r.status==='Late';}).length;
+  var ab=tr.filter(function(r){return r.status==='Absent';}).length;
+  var lv=tr.filter(function(r){return r.status==='Leave'||r.status==='Sick Leave';}).length;
+  var th2=tr.reduce(function(s,r){return s+(parseFloat(r.workHours)||0);},0);
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>📋 Employee Attendance</h2><p>Daily attendance — <strong>🔍 Name type කරන්න, details auto-fill වෙනවා!</strong></p></div>
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value">${pt}</div><div class="stat-label">Present</div></div>
+      <div class="stat-card red"><div class="stat-icon">❌</div><div class="stat-value">${ab}</div><div class="stat-label">Absent</div></div>
+      <div class="stat-card orange"><div class="stat-icon">📅</div><div class="stat-value">${lv}</div><div class="stat-label">Leave</div></div>
+      <div class="stat-card blue"><div class="stat-icon">⏱️</div><div class="stat-value">${th2.toFixed(1)}</div><div class="stat-label">Man-Hours</div></div>
+    </div>
+    <div class="form-card"><h3>📝 Mark Attendance</h3><div class="form-grid">
+      <div class="form-group"><label>Date *</label><input type="date" id="eaDate" value="${td}"></div>
+      <div class="form-group"><label>Name * 🔍</label><input type="text" id="eaName" placeholder="🔍 Type name to auto-fill..."></div>
+      <div class="form-group"><label>Emp. ID *</label><input type="text" id="eaEmpId"></div>
+      <div class="form-group"><label>NIC</label><input type="text" id="eaNIC"></div>
+      <div class="form-group"><label>Designation</label><select id="eaDesignation"><option value="">— Select —</option><option>Project Manager</option><option>Site Engineer</option><option>Safety Officer</option><option>Foreman</option><option>Supervisor</option><option>Electrician</option><option>Plumber</option><option>Mason</option><option>Carpenter</option><option>Welder</option><option>Rigger</option><option>Crane Operator</option><option>Driver</option><option>Helper</option><option>Store Keeper</option><option>Security Guard</option><option>Office Staff</option><option>Other</option></select></div>
+      <div class="form-group"><label>Department</label><select id="eaDept"><option value="">— Select —</option><option>Civil</option><option>Electrical</option><option>Mechanical</option><option>Plumbing</option><option>HVAC</option><option>Fire Protection</option><option>HSE</option><option>Admin/HR</option><option>Store</option><option>QA/QC</option><option>Other</option></select></div>
+      <div class="form-group"><label>Project *</label><input type="text" id="eaProject" placeholder="🔍 Type project..."></div>
+      <div class="form-group"><label>Check-in *</label><input type="time" id="eaCheckIn" value="07:30"></div>
+      <div class="form-group"><label>Check-out</label><input type="time" id="eaCheckOut" value="17:30"></div>
+      <div class="form-group"><label>Hours (Auto)</label><input type="text" id="eaWorkHours" readonly style="background:#f8f9fa;"></div>
+      <div class="form-group"><label>OT Hours</label><input type="number" id="eaOT" value="0" step="0.5"></div>
+      <div class="form-group"><label>Status *</label><select id="eaStatus"><option>Present</option><option>Absent</option><option>Half Day</option><option>Late</option><option>Leave</option><option>Sick Leave</option><option>Holiday</option></select></div>
+      <div class="form-group full-width"><label>Remarks</label><textarea id="eaRemarks"></textarea></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="saveEmployeeAttendance()">💾 Save</button>
+      <button class="btn btn-warning" onclick="saveEmployeeAttendance(true)">☁️ Sync</button>
+    </div></div>
+    <div class="form-card"><h3>🔍 Filter</h3><div class="form-grid">
+      <div class="form-group"><label>Date</label><input type="date" id="eaFilterDate" value="${td}" onchange="filterEA()"></div>
+      <div class="form-group"><label>Name</label><input type="text" id="eaFilterName" oninput="filterEA()"></div>
+      <div class="form-group"><label>Status</label><select id="eaFilterStatus" onchange="filterEA()"><option value="">All</option><option>Present</option><option>Absent</option><option>Leave</option></select></div>
+    </div></div>
+    <div class="table-card"><h3>📋 Register (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Date</th><th>Name</th><th>Emp ID</th><th>Designation</th><th>In</th><th>Out</th><th>Hours</th><th>OT</th><th>Status</th></tr></thead>
+      <tbody id="eaTableBody">${data.map(function(r){return '<tr><td><strong>'+r.id+'</strong></td><td>'+r.date+'</td><td>'+r.name+'</td><td>'+r.empId+'</td><td>'+(r.designation||'-')+'</td><td>'+(r.checkIn||'-')+'</td><td>'+(r.checkOut||'-')+'</td><td><strong>'+(r.workHours||'-')+'</strong></td><td>'+(r.overtime||'0')+'</td><td><span class="status-badge '+(r.status==='Present'||r.status==='Late'?'status-safe':r.status==='Absent'?'status-unsafe':'status-pending')+'">'+r.status+'</span></td></tr>';}).join('')}</tbody>
+    </table></div></div></div>`;
+
+  ['eaCheckIn','eaCheckOut'].forEach(function(id){var el=$(id);if(el)el.addEventListener('change',calcEAHrs);});
+  calcEAHrs();
+
+  // 🔍 Name auto-fill
+  setupAutocomplete('eaName',function(person){
+    setFieldValue('eaEmpId',person.empId||'');
+    setFieldValue('eaNIC',person.nic||'');
+    setFieldValue('eaProject',person.project||'');
+    setSelectIfMatch('eaDesignation',person.designation||'');
+    setSelectIfMatch('eaDept',person.department||'');
+    showToast('✅ '+person.name+' — details auto-filled!','info');
+  });
+
+  // 🆕 Project auto-suggest
+  setupAutocomplete('eaProject',null,'project');
+}
+
+function calcEAHrs(){
+  var ci=$('eaCheckIn')?$('eaCheckIn').value:null;
+  var co=$('eaCheckOut')?$('eaCheckOut').value:null;
+  if(ci&&co){var s=new Date('2000-01-01T'+ci),e=new Date('2000-01-01T'+co);var d=(e-s)/(1000*60*60);if(d<0)d+=24;if($('eaWorkHours'))$('eaWorkHours').value=d.toFixed(1)+' hrs';}
+}
+
+function filterEA(){
+  var fd=$('eaFilterDate')?$('eaFilterDate').value:'';
+  var fn=$('eaFilterName')?$('eaFilterName').value.toLowerCase():'';
+  var fs=$('eaFilterStatus')?$('eaFilterStatus').value:'';
+  var data=getStoredData('employeeAttendance');var f=data;
+  if(fd)f=f.filter(function(r){return r.date===fd;});
+  if(fn)f=f.filter(function(r){return (r.name||'').toLowerCase().includes(fn);});
+  if(fs)f=f.filter(function(r){return r.status===fs;});
+  var tb=$('eaTableBody');
+  if(tb)tb.innerHTML=f.map(function(r){return '<tr><td><strong>'+r.id+'</strong></td><td>'+r.date+'</td><td>'+r.name+'</td><td>'+r.empId+'</td><td>'+(r.designation||'-')+'</td><td>'+(r.checkIn||'-')+'</td><td>'+(r.checkOut||'-')+'</td><td><strong>'+(r.workHours||'-')+'</strong></td><td>'+(r.overtime||'0')+'</td><td><span class="status-badge '+(r.status==='Present'||r.status==='Late'?'status-safe':r.status==='Absent'?'status-unsafe':'status-pending')+'">'+r.status+'</span></td></tr>';}).join('');
+}
+
+function saveEmployeeAttendance(sync){
+  sync=sync||false;
+  var ci=$('eaCheckIn').value,co=$('eaCheckOut').value;var wh='';
+  if(ci&&co){var s=new Date('2000-01-01T'+ci),e=new Date('2000-01-01T'+co);var d=(e-s)/(1000*60*60);if(d<0)d+=24;wh=d.toFixed(1);}
+  var record={id:generateId('EA'),date:$('eaDate').value,name:$('eaName').value,empId:$('eaEmpId').value,nic:$('eaNIC')?$('eaNIC').value:'',designation:$('eaDesignation').value,department:$('eaDept')?$('eaDept').value:'',project:$('eaProject')?$('eaProject').value:'',checkIn:ci,checkOut:co,workHours:wh,overtime:$('eaOT')?$('eaOT').value:'0',status:$('eaStatus').value,remarks:$('eaRemarks')?$('eaRemarks').value:'',timestamp:now()};
+  if(!record.name||!record.empId){showToast('Name & Emp ID required','error');return;}
+  addRecord('employeeAttendance',record);showToast('✅ Attendance saved!','success');
+  if(sync)submitToSheet('EmployeeAttendance',Object.values(record));renderEmployeeAttendance();
+}
+
+// ============================================
+// 👷 SUB-CONTRACTOR ATTENDANCE
+// ============================================
+function renderSubContractorAttendance(){
+  var data=getStoredData('subContractorAttendance');var td=today();
+  var tr=data.filter(function(r){return r.date===td;});
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>👷 Sub-Contractor Attendance</h2><p>🔍 Name/Company type කරන්න, details auto-fill වෙනවා!</p></div>
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-value">${tr.filter(function(r){return r.status==='Present';}).length}</div><div class="stat-label">Present Today</div></div>
+      <div class="stat-card blue"><div class="stat-value">${[...new Set(data.map(function(r){return r.company;}))].length}</div><div class="stat-label">Companies</div></div>
+      <div class="stat-card red"><div class="stat-value">${tr.filter(function(r){return r.safetyInduction==='No';}).length}</div><div class="stat-label">No Induction</div></div>
+      <div class="stat-card orange"><div class="stat-value">${tr.filter(function(r){return r.ppeCompliance!=='Yes';}).length}</div><div class="stat-label">PPE Issues</div></div>
+    </div>
+    <div class="form-card"><h3>📝 Mark Attendance</h3><div class="form-grid">
+      <div class="form-group"><label>Date *</label><input type="date" id="scaDate" value="${td}"></div>
+      <div class="form-group"><label>Company * 🔍</label><input type="text" id="scaCompany" placeholder="🔍 Type company..."></div>
+      <div class="form-group"><label>Worker * 🔍</label><input type="text" id="scaName" placeholder="🔍 Type worker name..."></div>
+      <div class="form-group"><label>NIC *</label><input type="text" id="scaNIC"></div>
+      <div class="form-group"><label>Trade *</label><select id="scaTrade"><option value="">— Select —</option><option>Mason</option><option>Carpenter</option><option>Electrician</option><option>Plumber</option><option>Welder</option><option>Fitter</option><option>Rigger</option><option>Scaffolder</option><option>Painter</option><option>Steel Fixer</option><option>Bar Bender</option><option>Crane Operator</option><option>Driver</option><option>Helper/Labourer</option><option>Supervisor</option><option>Other</option></select></div>
+      <div class="form-group"><label>Project *</label><input type="text" id="scaProject" placeholder="🔍 Type project..."></div>
+      <div class="form-group"><label>Check-in *</label><input type="time" id="scaCheckIn" value="07:00"></div>
+      <div class="form-group"><label>Check-out</label><input type="time" id="scaCheckOut" value="17:00"></div>
+      <div class="form-group"><label>Hours (Auto)</label><input type="text" id="scaWorkHours" readonly style="background:#f8f9fa;"></div>
+      <div class="form-group"><label>Induction *</label><select id="scaInduction"><option>Yes</option><option>No</option><option>Pending</option></select></div>
+      <div class="form-group"><label>PPE *</label><select id="scaPPE"><option>Yes</option><option>No</option><option>Partial</option></select></div>
+      <div class="form-group"><label>Supervisor 🔍</label><input type="text" id="scaSupervisor" placeholder="🔍 Type name..."></div>
+      <div class="form-group"><label>Status *</label><select id="scaStatus"><option>Present</option><option>Absent</option><option>Half Day</option></select></div>
+      <div class="form-group full-width"><label>Remarks</label><textarea id="scaRemarks"></textarea></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="saveSCA()">💾 Save</button>
+      <button class="btn btn-warning" onclick="saveSCA(true)">☁️ Sync</button>
+    </div></div>
+    <div class="table-card"><h3>📋 Register (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Date</th><th>Company</th><th>Worker</th><th>Trade</th><th>In</th><th>Out</th><th>Hours</th><th>Induction</th><th>PPE</th><th>Status</th></tr></thead>
+      <tbody>${data.map(function(r){return '<tr><td><strong>'+r.id+'</strong></td><td>'+r.date+'</td><td>'+r.company+'</td><td>'+r.name+'</td><td>'+r.trade+'</td><td>'+(r.checkIn||'-')+'</td><td>'+(r.checkOut||'-')+'</td><td><strong>'+(r.workHours||'-')+'</strong></td><td><span class="status-badge '+(r.safetyInduction==='Yes'?'status-safe':'status-unsafe')+'">'+r.safetyInduction+'</span></td><td><span class="status-badge '+(r.ppeCompliance==='Yes'?'status-safe':r.ppeCompliance==='No'?'status-unsafe':'status-pending')+'">'+r.ppeCompliance+'</span></td><td><span class="status-badge '+(r.status==='Present'?'status-safe':'status-unsafe')+'">'+r.status+'</span></td></tr>';}).join('')}</tbody>
+    </table></div></div></div>`;
+
+  ['scaCheckIn','scaCheckOut'].forEach(function(id){var el=$(id);if(el)el.addEventListener('change',calcSCHrs);});
+  calcSCHrs();
+
+  setupAutocomplete('scaCompany',null,'company');
+  setupAutocomplete('scaName',function(person){
+    setFieldValue('scaNIC',person.nic||'');
+    setFieldValue('scaCompany',person.company||'');
+    setFieldValue('scaProject',person.project||'');
+    setSelectIfMatch('scaTrade',person.trade||person.designation||'');
+    showToast('✅ '+person.name+' — details auto-filled!','info');
+  });
+  setupAutocomplete('scaSupervisor',null);
+  setupAutocomplete('scaProject',null,'project');
+}
+
+function calcSCHrs(){
+  var ci=$('scaCheckIn')?$('scaCheckIn').value:null;
+  var co=$('scaCheckOut')?$('scaCheckOut').value:null;
+  if(ci&&co){var s=new Date('2000-01-01T'+ci),e=new Date('2000-01-01T'+co);var d=(e-s)/(1000*60*60);if(d<0)d+=24;if($('scaWorkHours'))$('scaWorkHours').value=d.toFixed(1)+' hrs';}
+}
+
+function saveSCA(sync){
+  sync=sync||false;
+  var ci=$('scaCheckIn').value,co=$('scaCheckOut').value;var wh='';
+  if(ci&&co){var s=new Date('2000-01-01T'+ci),e=new Date('2000-01-01T'+co);var d=(e-s)/(1000*60*60);if(d<0)d+=24;wh=d.toFixed(1);}
+  var record={id:generateId('SCA'),date:$('scaDate').value,company:$('scaCompany').value,name:$('scaName').value,nic:$('scaNIC')?$('scaNIC').value:'',trade:$('scaTrade').value,project:$('scaProject')?$('scaProject').value:'',checkIn:ci,checkOut:co,workHours:wh,safetyInduction:$('scaInduction').value,ppeCompliance:$('scaPPE').value,supervisor:$('scaSupervisor')?$('scaSupervisor').value:'',status:$('scaStatus').value,remarks:$('scaRemarks')?$('scaRemarks').value:'',timestamp:now()};
+  if(!record.name||!record.company){showToast('Worker name & company required','error');return;}
+  addRecord('subContractorAttendance',record);
+  if(record.safetyInduction==='No'||record.ppeCompliance==='No'){
+    showToast('⚠️ SAFETY ALERT: Induction/PPE issue for '+record.name,'error');
+  } else {
+    showToast('✅ SC Attendance saved!','success');
+  }
+  if(sync){
+    submitToSheet('SubContractorAttendance',[
+      record.id,record.date,record.company,record.name,record.nic,record.trade,
+      record.project,record.checkIn,record.checkOut,record.workHours,
+      record.safetyInduction,record.ppeCompliance,record.supervisor,
+      record.status,record.remarks,record.timestamp
+    ]);
+  }
+  renderSubContractorAttendance();
+}
+// ============================================
+// 🏥 HEALTH INFORMATION — COMPLETE 4 TABS
+// ============================================
+function renderHealthInfo(){
+  var data=getStoredData('healthInfo');
+  var unfitCount=data.filter(function(r){return r.fitToWork==='No';}).length;
+  var expCerts=data.filter(function(r){return r.fitnessCertStatus==='Expired';}).length;
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>🏥 Health Information Register</h2>
+      <p>Medical records, fitness certificates & emergency contacts</p>
+      <span class="legal-tag tag-factory">Factory Ordinance Part III — Health</span>
+      <span class="legal-tag tag-iso">ISO 45001 Clause 7.1</span></div>
+
+    <div class="stats-grid">
+      <div class="stat-card blue"><div class="stat-value">${data.length}</div><div class="stat-label">Total Records</div></div>
+      <div class="stat-card green"><div class="stat-value">${data.filter(function(r){return r.fitToWork==='Yes';}).length}</div><div class="stat-label">Fit to Work</div></div>
+      <div class="stat-card red"><div class="stat-value">${unfitCount}</div><div class="stat-label">Not Fit</div></div>
+      <div class="stat-card orange"><div class="stat-value">${expCerts}</div><div class="stat-label">Expired Certs</div></div>
+    </div>
+
+    <div class="form-card"><h3>📝 Add/Update Health Record</h3>
+
+      <!-- Tab Navigation -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchHealthTab('basic')">👤 Basic Info</button>
+        <button class="tab-btn" onclick="switchHealthTab('emergency')">🆘 Emergency</button>
+        <button class="tab-btn" onclick="switchHealthTab('medical')">🏥 Medical</button>
+        <button class="tab-btn" onclick="switchHealthTab('fitness')">📋 Fitness</button>
+      </div>
+
+      <!-- Tab 1: Basic Info -->
+      <div class="tab-content active" id="healthTab_basic">
+        <div class="form-grid">
+          <div class="form-group"><label>Person Type *</label><select id="hiPersonType"><option>Employee</option><option>Sub-Contractor</option><option>Visitor</option></select></div>
+          <div class="form-group"><label>Name * 🔍</label><input type="text" id="hiName" placeholder="🔍 Type name to search..."></div>
+          <div class="form-group"><label>ID / NIC *</label><input type="text" id="hiNIC" placeholder="NIC Number"></div>
+          <div class="form-group"><label>Company</label><input type="text" id="hiCompany" placeholder="🔍 Type company..."></div>
+          <div class="form-group"><label>Designation</label><input type="text" id="hiDesignation"></div>
+          <div class="form-group"><label>Date of Birth</label><input type="date" id="hiDOB" onchange="calcAge()"></div>
+          <div class="form-group"><label>Age</label><input type="number" id="hiAge" readonly style="background:#f8f9fa;"></div>
+          <div class="form-group"><label>Gender</label><select id="hiGender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+          <div class="form-group"><label>Blood Group *</label><select id="hiBloodGroup"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option><option>Unknown</option></select></div>
+          <div class="form-group"><label>Phone</label><input type="tel" id="hiPhone"></div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Emergency Contact -->
+      <div class="tab-content" id="healthTab_emergency">
+        <div class="form-grid">
+          <div class="form-group"><label>Emergency Contact Name *</label><input type="text" id="hiEmergName"></div>
+          <div class="form-group"><label>Relationship</label><select id="hiEmergRelation"><option>Spouse</option><option>Parent</option><option>Sibling</option><option>Child</option><option>Friend</option><option>Other</option></select></div>
+          <div class="form-group"><label>Emergency Phone *</label><input type="tel" id="hiEmergPhone"></div>
+          <div class="form-group full-width"><label>Emergency Address</label><textarea id="hiEmergAddress" placeholder="Home address..."></textarea></div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Medical History -->
+      <div class="tab-content" id="healthTab_medical">
+        <div class="form-grid">
+          <div class="form-group full-width"><label>Medical Conditions</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+              ${['None','Diabetes','Hypertension','Heart Disease','Asthma','Epilepsy','Vertigo','Back Pain','Arthritis','Hearing Loss','Vision Problems','Skin Conditions','Respiratory Issues','Mental Health'].map(function(c){
+                return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;padding:4px 8px;background:var(--body-bg);border-radius:4px;cursor:pointer;text-transform:none;font-weight:normal;"><input type="checkbox" class="hiCondition" value="'+c+'" style="width:14px;height:14px;"> '+c+'</label>';
+              }).join('')}
+            </div>
+            <input type="text" id="hiConditionsOther" placeholder="Other conditions (comma separated)...">
+          </div>
+          <div class="form-group full-width"><label>Known Allergies</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+              ${['None','Dust','Pollen','Latex','Penicillin','Aspirin','Insect Stings','Food Allergies','Chemical Sensitivity'].map(function(a){
+                return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;padding:4px 8px;background:var(--body-bg);border-radius:4px;cursor:pointer;text-transform:none;font-weight:normal;"><input type="checkbox" class="hiAllergy" value="'+a+'" style="width:14px;height:14px;"> '+a+'</label>';
+              }).join('')}
+            </div>
+            <input type="text" id="hiAllergiesOther" placeholder="Other allergies...">
+          </div>
+          <div class="form-group full-width"><label>Current Medications</label><textarea id="hiMedications" placeholder="List current medications..."></textarea></div>
+          <div class="form-group full-width"><label>Previous Work-Related Injuries</label><textarea id="hiPrevInjuries" placeholder="Describe any previous injuries..."></textarea></div>
+          <div class="form-group"><label>Last Medical Exam Date</label><input type="date" id="hiLastMedical"></div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Fitness & Restrictions -->
+      <div class="tab-content" id="healthTab_fitness">
+        <div class="form-grid">
+          <div class="form-group"><label>Fitness Certificate Status *</label><select id="hiFitnessCert"><option>Valid</option><option>Expired</option><option>Pending</option><option>Not Required</option></select></div>
+          <div class="form-group"><label>Certificate Expiry</label><input type="date" id="hiCertExpiry"></div>
+          <div class="form-group"><label>Doctor / Medical Officer</label><input type="text" id="hiDoctor" placeholder="Dr. Name"></div>
+          <div class="form-group"><label>Fit to Work *</label><select id="hiFitToWork" onchange="toggleRestrictions()"><option>Yes</option><option>No</option><option>Conditional</option></select></div>
+          <div class="form-group"><label>Work Restrictions</label><select id="hiRestrictions"><option>None</option><option>No Heights</option><option>No Heavy Lifting</option><option>No Night Work</option><option>Light Duties Only</option><option>Ground Level Only</option><option>Restricted Hours</option><option>Multiple Restrictions</option></select></div>
+          <div class="form-group full-width" id="hiRestrictionDetailsWrap"><label>Restriction Details</label><textarea id="hiRestrictionDetails" placeholder="Specific restriction details..."></textarea></div>
+          <div class="form-group"><label>Record Date</label><input type="date" id="hiRecordDate" value="${today()}"></div>
+          <div class="form-group full-width"><label>Remarks</label><textarea id="hiRemarks" placeholder="Additional notes..."></textarea></div>
+        </div>
+
+        <!-- Fitness Warning Box -->
+        <div id="hiFitnessWarning" style="display:none;margin-top:15px;padding:15px;background:#f8d7da;border:2px solid #f5c6cb;border-radius:8px;">
+          <h4 style="color:#721c24;margin:0 0 8px;">⚠️ HEALTH RESTRICTION WARNING</h4>
+          <ul style="margin:0;padding-left:20px;font-size:13px;color:#721c24;">
+            <li>Person must NOT be assigned to height work</li>
+            <li>Must NOT operate heavy machinery or cranes</li>
+            <li>Must NOT enter confined spaces</li>
+            <li>Assign ground-level duties ONLY</li>
+            <li>Inform site supervisor immediately</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="form-actions" style="margin-top:20px;">
+        <button class="btn btn-success" onclick="saveHealthInfo()">💾 Save Health Record</button>
+        <button class="btn btn-warning" onclick="saveHealthInfo(true)">☁️ Save & Sync</button>
+      </div>
+    </div>
+
+    <!-- Health Records Table -->
+    <div class="table-card"><h3>📋 Health Register (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Type</th><th>Name</th><th>NIC</th><th>Blood</th><th>Conditions</th><th>Cert</th><th>Fit</th><th>Restrictions</th></tr></thead>
+      <tbody>${data.map(function(r){return '<tr>'+
+        '<td><strong>'+r.id+'</strong></td>'+
+        '<td><span class="status-badge '+(r.personType==='Employee'?'status-safe':'status-pending')+'">'+r.personType+'</span></td>'+
+        '<td>'+r.name+'</td>'+
+        '<td>'+r.nic+'</td>'+
+        '<td><strong>'+(r.bloodGroup||'-')+'</strong></td>'+
+        '<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">'+(r.conditions||'None')+'</td>'+
+        '<td><span class="status-badge '+(r.fitnessCertStatus==='Valid'?'status-safe':r.fitnessCertStatus==='Expired'?'status-expired':'status-pending')+'">'+(r.fitnessCertStatus||'-')+'</span></td>'+
+        '<td><span class="status-badge '+(r.fitToWork==='Yes'?'status-safe':r.fitToWork==='No'?'status-unsafe':'status-pending')+'">'+(r.fitToWork||'-')+'</span></td>'+
+        '<td>'+(r.restrictions||'None')+'</td>'+
+      '</tr>';}).join('')}</tbody>
+    </table></div></div>
+  </div>`;
+
+  // 🔍 Autocomplete for name
+  setupAutocomplete('hiName',function(person){
+    setFieldValue('hiNIC',person.nic||'');
+    setFieldValue('hiCompany',person.company||'');
+    setFieldValue('hiDesignation',person.designation||person.trade||'');
+    setFieldValue('hiPhone',person.phone||'');
+    if(person.type==='subcontractor') setSelectIfMatch('hiPersonType','Sub-Contractor');
+    showToast('✅ '+person.name+' — details auto-filled!','info');
+  });
+
+  // 🔍 Company autocomplete
+  setupAutocomplete('hiCompany',null,'company');
+}
+
+// Switch health tabs
+function switchHealthTab(tab){
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  var tabEl=$('healthTab_'+tab);
+  if(tabEl) tabEl.classList.add('active');
+  // Highlight active tab button
+  var buttons=document.querySelectorAll('.tab-btn');
+  var tabNames=['basic','emergency','medical','fitness'];
+  var idx=tabNames.indexOf(tab);
+  if(idx>=0 && buttons[idx]) buttons[idx].classList.add('active');
+}
+
+// Calculate age from DOB
+function calcAge(){
+  var dob=$('hiDOB')?$('hiDOB').value:'';
+  if(dob){
+    var birth=new Date(dob);
+    var ageDiff=Date.now()-birth.getTime();
+    var ageDate=new Date(ageDiff);
+    var age=Math.abs(ageDate.getUTCFullYear()-1970);
+    if($('hiAge')) $('hiAge').value=age;
+  }
+}
+
+// Toggle restriction warning
+function toggleRestrictions(){
+  var fit=$('hiFitToWork')?$('hiFitToWork').value:'Yes';
+  var warning=$('hiFitnessWarning');
+  if(warning){
+    warning.style.display=(fit==='No'||fit==='Conditional')?'block':'none';
+  }
+}
+
+// Get checked values from checkboxes
+function getCheckedValues(className){
+  var checked=[];
+  document.querySelectorAll('.'+className+':checked').forEach(function(cb){
+    checked.push(cb.value);
+  });
+  return checked;
+}
+
+// 💾 Save Health Info
+function saveHealthInfo(sync){
+  sync=sync||false;
+
+  // Gather medical conditions
+  var conditions=getCheckedValues('hiCondition');
+  var condOther=$('hiConditionsOther')?$('hiConditionsOther').value:'';
+  if(condOther) conditions.push(condOther);
+  var condStr=conditions.filter(function(c){return c!=='None';}).join(', ')||'None';
+
+  // Gather allergies
+  var allergies=getCheckedValues('hiAllergy');
+  var allergyOther=$('hiAllergiesOther')?$('hiAllergiesOther').value:'';
+  if(allergyOther) allergies.push(allergyOther);
+  var allergyStr=allergies.filter(function(a){return a!=='None';}).join(', ')||'None';
+
+  var record={
+    id:generateId('HI'),
+    personType:$('hiPersonType').value,
+    name:$('hiName').value,
+    nic:$('hiNIC').value,
+    company:$('hiCompany')?$('hiCompany').value:'',
+    designation:$('hiDesignation')?$('hiDesignation').value:'',
+    dob:$('hiDOB')?$('hiDOB').value:'',
+    age:$('hiAge')?$('hiAge').value:'',
+    gender:$('hiGender').value,
+    bloodGroup:$('hiBloodGroup').value,
+    phone:$('hiPhone')?$('hiPhone').value:'',
+    emergName:$('hiEmergName')?$('hiEmergName').value:'',
+    emergRelation:$('hiEmergRelation')?$('hiEmergRelation').value:'',
+    emergPhone:$('hiEmergPhone')?$('hiEmergPhone').value:'',
+    emergAddress:$('hiEmergAddress')?$('hiEmergAddress').value:'',
+    conditions:condStr,
+    allergies:allergyStr,
+    medications:$('hiMedications')?$('hiMedications').value:'',
+    prevInjuries:$('hiPrevInjuries')?$('hiPrevInjuries').value:'',
+    lastMedical:$('hiLastMedical')?$('hiLastMedical').value:'',
+    fitnessCertStatus:$('hiFitnessCert')?$('hiFitnessCert').value:'',
+    certExpiry:$('hiCertExpiry')?$('hiCertExpiry').value:'',
+    doctor:$('hiDoctor')?$('hiDoctor').value:'',
+    fitToWork:$('hiFitToWork')?$('hiFitToWork').value:'Yes',
+    restrictions:$('hiRestrictions')?$('hiRestrictions').value:'None',
+    restrictionDetails:$('hiRestrictionDetails')?$('hiRestrictionDetails').value:'',
+    recordDate:$('hiRecordDate')?$('hiRecordDate').value:today(),
+    remarks:$('hiRemarks')?$('hiRemarks').value:'',
+    timestamp:now()
+  };
+
+  if(!record.name||!record.nic){showToast('Name & NIC required','error');return;}
+
+  addRecord('healthInfo',record);
+
+  // Show warning for unfit/restrictions
+  if(record.fitToWork==='No'){
+    showToast('⚠️ ALERT: '+record.name+' is NOT FIT TO WORK!','error');
+  } else if(record.fitnessCertStatus==='Expired'){
+    showToast('⚠️ '+record.name+' — Certificate EXPIRED!','warning');
+  } else if(conditions.indexOf('Epilepsy')!==-1||conditions.indexOf('Vertigo')!==-1){
+    showToast('⚠️ '+record.name+' — NO HEIGHT WORK (Epilepsy/Vertigo)','warning');
+  } else {
+    showToast('🏥 Health record saved!','success');
+  }
+
+  if(sync){
+    // GS HealthInfo columns order
+    submitToSheet('HealthInfo',[
+      record.id,record.personType,record.name,record.nic,record.company,record.designation,
+      record.dob,record.age,record.gender,record.bloodGroup,record.phone,
+      record.emergName,record.emergRelation,record.emergPhone,record.emergAddress,
+      record.conditions,record.allergies,record.medications,record.prevInjuries,
+      record.lastMedical,record.fitnessCertStatus,record.certExpiry,record.doctor,
+      record.fitToWork,record.restrictions,record.restrictionDetails,
+      record.recordDate,record.remarks,record.timestamp
+    ]);
+  }
+  renderHealthInfo();
+}
+
+// ============================================
+// 🏗️ CIDA COMPLIANCE — NEW MODULE
+// ============================================
+function renderCIDA(){
+  var data=getStoredData('cida');
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>🏗️ CIDA Compliance</h2>
+      <p>Construction Industry Development Authority — Contractor Registration & Compliance</p>
+      <span class="legal-tag tag-cida">CIDA Regulation</span>
+      <span class="legal-tag tag-iso">ISO 45001 Clause 8.1.4</span></div>
+
+    <div class="stats-grid">
+      <div class="stat-card blue"><div class="stat-value">${data.length}</div><div class="stat-label">Total Contractors</div></div>
+      <div class="stat-card green"><div class="stat-value">${data.filter(function(r){return r.compliance==='Compliant';}).length}</div><div class="stat-label">Compliant</div></div>
+      <div class="stat-card red"><div class="stat-value">${data.filter(function(r){return r.compliance==='Non-Compliant';}).length}</div><div class="stat-label">Non-Compliant</div></div>
+      <div class="stat-card orange"><div class="stat-value">${data.filter(function(r){var exp=r.expiry;if(!exp)return false;return new Date(exp)<new Date();}).length}</div><div class="stat-label">Expired Reg.</div></div>
+    </div>
+
+    <div class="form-card"><h3>📝 Add Contractor Record</h3><div class="form-grid">
+      <div class="form-group"><label>Reg. No. *</label><input type="text" id="cidaRegNo" placeholder="CIDA/REG/12345"></div>
+      <div class="form-group"><label>Contractor Name * 🔍</label><input type="text" id="cidaContractor" placeholder="🔍 Type company..."></div>
+      <div class="form-group"><label>CIDA Grade *</label><select id="cidaGrade"><option>C1</option><option>C2</option><option>C3</option><option>C4</option><option>C5</option><option>C6</option><option>C7</option><option>C8</option><option>C9</option><option>C10</option><option>CS1</option><option>CS2</option><option>EM1</option><option>EM2</option><option>EM3</option><option>EM4</option><option>EM5</option></select></div>
+      <div class="form-group"><label>Reg. Expiry *</label><input type="date" id="cidaExpiry"></div>
+      <div class="form-group"><label>Project</label><input type="text" id="cidaProject" placeholder="🔍 Type project..."></div>
+      <div class="form-group"><label>Tech. Officer</label><input type="text" id="cidaTechOfficer" placeholder="Name"></div>
+      <div class="form-group"><label>Safety Officer Required</label><select id="cidaSafetyOfficer"><option>Yes</option><option>No</option><option>N/A</option></select></div>
+      <div class="form-group"><label>Safety Officer Name</label><input type="text" id="cidaSafetyName" placeholder="🔍 Type name..."></div>
+      <div class="form-group"><label>CAR Insurance</label><select id="cidaCAR"><option>Valid</option><option>Expired</option><option>Not Provided</option></select></div>
+      <div class="form-group"><label>WCI (Workmen's Comp)</label><select id="cidaWCI"><option>Valid</option><option>Expired</option><option>Not Provided</option></select></div>
+      <div class="form-group"><label>Third Party Liability</label><select id="cidaTPL"><option>Valid</option><option>Expired</option><option>Not Provided</option></select></div>
+      <div class="form-group"><label>Overall Compliance *</label><select id="cidaCompliance"><option>Compliant</option><option>Non-Compliant</option><option>Partially Compliant</option><option>Under Review</option></select></div>
+      <div class="form-group full-width"><label>Non-Compliance Details</label><textarea id="cidaNCDetails" placeholder="Describe any non-compliance issues..."></textarea></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="saveCIDA()">💾 Save</button>
+      <button class="btn btn-warning" onclick="saveCIDA(true)">☁️ Sync</button>
+    </div></div>
+
+    <div class="table-card"><h3>📋 CIDA Register (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Reg. No.</th><th>Contractor</th><th>Grade</th><th>Expiry</th><th>CAR</th><th>WCI</th><th>Compliance</th></tr></thead>
+      <tbody>${data.map(function(r){
+        var isExpired=r.expiry&&new Date(r.expiry)<new Date();
+        return '<tr>'+
+        '<td><strong>'+r.id+'</strong></td>'+
+        '<td>'+r.regNo+'</td>'+
+        '<td>'+r.contractor+'</td>'+
+        '<td><strong>'+r.grade+'</strong></td>'+
+        '<td><span class="status-badge '+(isExpired?'status-expired':'status-safe')+'">'+(r.expiry||'-')+'</span></td>'+
+        '<td><span class="status-badge '+(r.car==='Valid'?'status-safe':'status-unsafe')+'">'+(r.car||'-')+'</span></td>'+
+        '<td><span class="status-badge '+(r.wci==='Valid'?'status-safe':'status-unsafe')+'">'+(r.wci||'-')+'</span></td>'+
+        '<td><span class="status-badge '+(r.compliance==='Compliant'?'status-safe':r.compliance==='Non-Compliant'?'status-unsafe':'status-pending')+'">'+r.compliance+'</span></td>'+
+      '</tr>';}).join('')}</tbody>
+    </table></div></div>
+  </div>`;
+
+  setupAutocomplete('cidaContractor',null,'company');
+  setupAutocomplete('cidaProject',null,'project');
+  setupAutocomplete('cidaSafetyName',null);
+}
+
+function saveCIDA(sync){
+  sync=sync||false;
+  var record={
+    id:generateId('CIDA'),
+    regNo:$('cidaRegNo').value,
+    contractor:$('cidaContractor').value,
+    grade:$('cidaGrade').value,
+    expiry:$('cidaExpiry')?$('cidaExpiry').value:'',
+    project:$('cidaProject')?$('cidaProject').value:'',
+    techOfficer:$('cidaTechOfficer')?$('cidaTechOfficer').value:'',
+    safetyOfficer:$('cidaSafetyOfficer').value,
+    safetyName:$('cidaSafetyName')?$('cidaSafetyName').value:'',
+    car:$('cidaCAR').value,
+    wci:$('cidaWCI').value,
+    tpl:$('cidaTPL').value,
+    compliance:$('cidaCompliance').value,
+    ncDetails:$('cidaNCDetails')?$('cidaNCDetails').value:'',
+    timestamp:now()
+  };
+  if(!record.regNo||!record.contractor){showToast('Reg No & Contractor required','error');return;}
+  addRecord('cida',record);showToast('CIDA record saved!','success');
+  if(sync)submitToSheet('CIDA',Object.values(record));
+  renderCIDA();
+}
+
+// ============================================
+// ⚖️ LEGAL REGISTER
+// ============================================
+function renderLegal(){
+  var data=getStoredData('legalRegister');
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>⚖️ Legal Register</h2>
+      <p>Track legal & regulatory compliance requirements</p>
+      <span class="legal-tag tag-factory">Factory Ordinance</span>
+      <span class="legal-tag tag-iso">ISO 45001 Clause 6.1.3</span>
+      <span class="legal-tag tag-cida">CIDA</span></div>
+
+    <div class="form-card"><h3>📝 Add Legal Requirement</h3><div class="form-grid">
+      <div class="form-group"><label>Legislation *</label><input type="text" id="legalLegislation" placeholder="e.g., Factory Ordinance"></div>
+      <div class="form-group"><label>Section *</label><input type="text" id="legalSection" placeholder="e.g., Part III Sec. 61"></div>
+      <div class="form-group"><label>Category *</label><select id="legalCategory">
+        <option>Health</option><option>Safety</option><option>Welfare</option><option>Fire Safety</option>
+        <option>Environmental</option><option>Insurance</option><option>Registration</option>
+        <option>Training</option><option>Reporting</option><option>PPE</option><option>Other</option>
+      </select></div>
+      <div class="form-group full-width"><label>Description *</label><textarea id="legalDescription" placeholder="Requirement details..."></textarea></div>
+      <div class="form-group"><label>Status *</label><select id="legalStatus"><option>Compliant</option><option>Non-Compliant</option><option>Partially Compliant</option><option>Under Review</option></select></div>
+      <div class="form-group"><label>Review Date</label><input type="date" id="legalReviewDate"></div>
+      <div class="form-group full-width"><label>Evidence</label><textarea id="legalEvidence" placeholder="Compliance evidence..."></textarea></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="saveLegal()">💾 Save</button>
+      <button class="btn btn-warning" onclick="saveLegal(true)">☁️ Sync</button>
+    </div></div>
+
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-value">${data.filter(function(r){return r.status==='Compliant';}).length}</div><div class="stat-label">Compliant</div></div>
+      <div class="stat-card red"><div class="stat-value">${data.filter(function(r){return r.status==='Non-Compliant';}).length}</div><div class="stat-label">Non-Compliant</div></div>
+      <div class="stat-card orange"><div class="stat-value">${data.filter(function(r){return r.status==='Partially Compliant';}).length}</div><div class="stat-label">Partial</div></div>
+      <div class="stat-card blue"><div class="stat-value">${data.length}</div><div class="stat-label">Total</div></div>
+    </div>
+
+    <div class="table-card"><h3>📋 Legal Register (${data.length})</h3><div class="table-wrapper"><table>
+      <thead><tr><th>ID</th><th>Legislation</th><th>Section</th><th>Category</th><th>Description</th><th>Status</th><th>Review</th></tr></thead>
+      <tbody>${data.map(function(r){return '<tr>'+
+        '<td><strong>'+r.id+'</strong></td><td>'+r.legislation+'</td><td>'+r.section+'</td><td>'+r.category+'</td>'+
+        '<td>'+(r.description||'').substring(0,50)+'...</td>'+
+        '<td><span class="status-badge '+(r.status==='Compliant'?'status-safe':r.status==='Non-Compliant'?'status-unsafe':'status-pending')+'">'+r.status+'</span></td>'+
+        '<td>'+(r.reviewDate||'-')+'</td>'+
+      '</tr>';}).join('')}</tbody>
+    </table></div></div>
+  </div>`;
+}
+
+function saveLegal(sync){
+  sync=sync||false;
+  var record={id:generateId('LEG'),legislation:$('legalLegislation').value,section:$('legalSection').value,category:$('legalCategory').value,description:$('legalDescription').value,status:$('legalStatus').value,reviewDate:$('legalReviewDate')?$('legalReviewDate').value:'',evidence:$('legalEvidence')?$('legalEvidence').value:'',timestamp:now()};
+  if(!record.legislation||!record.description){showToast('Fill required fields','error');return;}
+  addRecord('legalRegister',record);showToast('Legal record saved!','success');
+  if(sync)submitToSheet('LegalRegister',Object.values(record));renderLegal();
+}
+
+// ============================================
+// ✅ ISO 45001 AUDIT
+// ============================================
+function renderISOAudit(){
+  var clauses=[
+    {num:'4.1',title:'Understanding the Organization'},
+    {num:'4.2',title:'Understanding Needs of Workers'},
+    {num:'4.3',title:'Scope of OH&S Management System'},
+    {num:'4.4',title:'OH&S Management System'},
+    {num:'5.1',title:'Leadership and Commitment'},
+    {num:'5.2',title:'OH&S Policy'},
+    {num:'5.3',title:'Organizational Roles & Responsibilities'},
+    {num:'5.4',title:'Consultation and Participation'},
+    {num:'6.1',title:'Actions to Address Risks — HIRA'},
+    {num:'6.1.3',title:'Legal & Other Requirements'},
+    {num:'6.2',title:'OH&S Objectives and Planning'},
+    {num:'7.1',title:'Resources'},
+    {num:'7.2',title:'Competence & Training'},
+    {num:'7.3',title:'Awareness & Communication'},
+    {num:'7.5',title:'Documented Information'},
+    {num:'8.1',title:'Operational Planning and Control'},
+    {num:'8.1.2',title:'Eliminating Hazards / Reducing Risks'},
+    {num:'8.1.4',title:'Procurement & Outsourcing'},
+    {num:'8.2',title:'Emergency Preparedness and Response'},
+    {num:'9.1',title:'Monitoring, Measurement, Analysis'},
+    {num:'9.2',title:'Internal Audit'},
+    {num:'9.3',title:'Management Review'},
+    {num:'10.1',title:'Incident, NC & Corrective Action'},
+    {num:'10.2',title:'Continual Improvement'}
+  ];
+
+  var savedAudit=getStoredData('isoAuditData');
+  clauses.forEach(function(c){
+    var saved=savedAudit.find(function(s){return s.num===c.num;});
+    c.status=saved?saved.status:'';
+  });
+
+  var comp=clauses.filter(function(c){return c.status==='Conforming';}).length;
+  var total=clauses.length;
+  var pct=Math.round((comp/total)*100);
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>✅ ISO 45001:2018 Audit Checklist</h2>
+      <span class="legal-tag tag-iso">ISO 45001:2018</span></div>
+
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-value">${pct}%</div><div class="stat-label">Compliance</div></div>
+      <div class="stat-card green"><div class="stat-value">${comp}</div><div class="stat-label">Conforming</div></div>
+      <div class="stat-card red"><div class="stat-value">${clauses.filter(function(c){return c.status==='Non-Conforming';}).length}</div><div class="stat-label">Non-Conforming</div></div>
+      <div class="stat-card blue"><div class="stat-value">${total}</div><div class="stat-label">Total Clauses</div></div>
+    </div>
+
+    <div class="form-card"><h3>📋 Audit Checklist — Check each clause</h3>
+      <div class="progress-bar-container" style="margin-bottom:20px;height:20px;">
+        <div class="progress-bar-fill ${pct>=80?'progress-green':pct>=50?'progress-orange':'progress-red'}" style="width:${pct}%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold;">${pct}%</div>
+      </div>
+      ${clauses.map(function(c,i){return '<div class="checklist-item">'+
+        '<span style="min-width:55px;font-weight:700;color:var(--info);">'+c.num+'</span>'+
+        '<span style="flex:1;">'+c.title+'</span>'+
+        '<select id="iso_'+i+'" style="padding:6px 10px;border:2px solid var(--border);border-radius:6px;font-size:12px;min-width:150px;">'+
+          '<option value="" '+(c.status===''?'selected':'')+'>— Not Checked —</option>'+
+          '<option value="Conforming" '+(c.status==='Conforming'?'selected':'')+'>✅ Conforming</option>'+
+          '<option value="Observation" '+(c.status==='Observation'?'selected':'')+'>🟡 Observation</option>'+
+          '<option value="Minor NC" '+(c.status==='Minor NC'?'selected':'')+'>🟠 Minor NC</option>'+
+          '<option value="Major NC" '+(c.status==='Major NC'?'selected':'')+'>🔴 Major NC</option>'+
+          '<option value="Non-Conforming" '+(c.status==='Non-Conforming'?'selected':'')+'>❌ Non-Conforming</option>'+
+        '</select>'+
+      '</div>';}).join('')}
+      <div class="form-actions">
+        <button class="btn btn-success" onclick="saveISOAudit()">💾 Save Audit</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function updateISOStatus(){}
+function saveISOAudit(){
+  var clauseNums=['4.1','4.2','4.3','4.4','5.1','5.2','5.3','5.4','6.1','6.1.3','6.2','7.1','7.2','7.3','7.5','8.1','8.1.2','8.1.4','8.2','9.1','9.2','9.3','10.1','10.2'];
+  var data=clauseNums.map(function(num,i){return {num:num,status:$('iso_'+i)?$('iso_'+i).value:''};});
+  storeData('isoAuditData',data);
+  showToast('ISO Audit saved!','success');
+  renderISOAudit();
+}
+
+// ============================================
+// 🏭 FACTORY ORDINANCE CHECKLIST
+// ============================================
+function renderFactoryChecklist(){
+  var sections=[
+    {part:'Part III',title:'Health — Cleanliness',req:'Sec. 13'},
+    {part:'Part III',title:'Health — Overcrowding',req:'Sec. 14'},
+    {part:'Part III',title:'Health — Ventilation',req:'Sec. 15'},
+    {part:'Part III',title:'Health — Lighting',req:'Sec. 16'},
+    {part:'Part III',title:'Health — Drainage of Floors',req:'Sec. 17'},
+    {part:'Part III',title:'Health — Sanitary Conveniences',req:'Sec. 18'},
+    {part:'Part IV',title:'Safety — Fencing of Machinery',req:'Sec. 19-21'},
+    {part:'Part IV',title:'Safety — Work at Machinery in Motion',req:'Sec. 22'},
+    {part:'Part IV',title:'Safety — Self-Acting Machines',req:'Sec. 24'},
+    {part:'Part IV',title:'Safety — Hoists and Lifts',req:'Sec. 26'},
+    {part:'Part IV',title:'Safety — Chains, Ropes, Lifting Tackle',req:'Sec. 27'},
+    {part:'Part IV',title:'Safety — Cranes and Other Lifting Machines',req:'Sec. 28'},
+    {part:'Part IV',title:'Safety — Floors, Stairs, Means of Access',req:'Sec. 33'},
+    {part:'Part IV',title:'Safety — Excessive Weights',req:'Sec. 34'},
+    {part:'Part IV',title:'Safety — Steam Boilers',req:'Sec. 35-36'},
+    {part:'Part IV',title:'Safety — Fire Precautions',req:'Sec. 38-40'},
+    {part:'Part IV',title:'Safety — Safety of Buildings',req:'Sec. 41'},
+    {part:'Part IV',title:'Safety — Eye Protection',req:'Sec. 43'},
+    {part:'Part V',title:'Welfare — First Aid',req:'Sec. 46'},
+    {part:'Part V',title:'Welfare — Washing Facilities',req:'Sec. 48'},
+    {part:'Part V',title:'Welfare — Canteens',req:'Sec. 50'},
+    {part:'Part V',title:'Welfare — Drinking Water',req:'Sec. 52'},
+    {part:'Part V',title:'Welfare — Sitting Facilities',req:'Sec. 47'},
+    {part:'Part VIII',title:'Reporting — Accident Notification',req:'Sec. 61'},
+    {part:'Part VIII',title:'Reporting — Register of Workers',req:'Sec. 63'}
+  ];
+
+  var savedChecklist=getStoredData('factoryChecklistData');
+  sections.forEach(function(s,i){
+    var saved=savedChecklist.find(function(d){return d.idx===i;});
+    if(saved){s.status=saved.status;s.remarks=saved.remarks||'';}
+    else{s.status='';s.remarks='';}
+  });
+
+  var comp=sections.filter(function(s){return s.status==='Compliant';}).length;
+  var pct=Math.round((comp/sections.length)*100);
+
+  $('contentArea').innerHTML=`<div class="module-page active">
+    <div class="module-header"><h2>🏭 Factory Ordinance Checklist</h2>
+      <span class="legal-tag tag-factory">Factory Ordinance of Sri Lanka</span></div>
+
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-value">${pct}%</div><div class="stat-label">Compliance</div></div>
+      <div class="stat-card green"><div class="stat-value">${comp}</div><div class="stat-label">Compliant</div></div>
+      <div class="stat-card red"><div class="stat-value">${sections.filter(function(s){return s.status==='Non-Compliant';}).length}</div><div class="stat-label">Non-Compliant</div></div>
+    </div>
+
+    <div class="form-card"><h3>📋 Factory Ordinance Requirements</h3>
+      <div class="progress-bar-container" style="margin-bottom:20px;height:20px;">
+        <div class="progress-bar-fill ${pct>=80?'progress-green':pct>=50?'progress-orange':'progress-red'}" style="width:${pct}%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold;">${pct}%</div>
+      </div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>Part</th><th>Requirement</th><th>Section</th><th>Status</th></tr></thead>
+        <tbody>${sections.map(function(s,i){return '<tr>'+
+          '<td><strong>'+s.part+'</strong></td><td>'+s.title+'</td><td>'+s.req+'</td>'+
+          '<td><select id="fo_'+i+'" style="padding:6px;border:1px solid var(--border);border-radius:4px;font-size:11px;">'+
+            '<option value="" '+(s.status===''?'selected':'')+'>—</option>'+
+            '<option value="Compliant" '+(s.status==='Compliant'?'selected':'')+'>✅</option>'+
+            '<option value="Partial" '+(s.status==='Partial'?'selected':'')+'>🟡</option>'+
+            '<option value="Non-Compliant" '+(s.status==='Non-Compliant'?'selected':'')+'>❌</option>'+
+            '<option value="N/A" '+(s.status==='N/A'?'selected':'')+'>N/A</option>'+
+          '</select></td>'+
+        '</tr>';}).join('')}</tbody>
+      </table></div>
+      <div class="form-actions" style="margin-top:15px;">
+        <button class="btn btn-success" onclick="saveFactoryChecklist()">💾 Save Checklist</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function saveFactoryChecklist(){
+  var data=[];
+  for(var i=0;i<25;i++){
+    var el=$('fo_'+i);
+    if(el) data.push({idx:i,status:el.value,remarks:''});
+  }
+  storeData('factoryChecklistData',data);
+  showToast('Factory checklist saved!','success');
+  renderFactoryChecklist();
+}
+
+// ============================================
+// 📈 REPORTS
+// ============================================
+function renderReports(){
+  var inc=getStoredData('incidents'),fe=getStoredData('fireEquipment'),pt=getStoredData('powerTools'),
+    tr=getStoredData('trainings'),fd=getStoredData('fireDrills'),insp=getStoredData('inspections'),
+    br=getStoredData('briefings'),ea=getStoredData('employeeAttendance'),
+    sca=getStoredData('subContractorAttendance'),hi=getStoredData('healthInfo');
+  var byType={};inc.forEach(function(i){byType[i.type]=(byType[i.type]||0)+1;});
+
+  $('contentArea').innerHTML=`<div class="module-page active"><div class="module-header"><h2>📈 Reports & Analytics</h2></div>
+    <div class="stats-grid">
+      <div class="stat-card blue"><div class="stat-value">${inc.length}</div><div class="stat-label">Incidents</div></div>
+      <div class="stat-card green"><div class="stat-value">${fe.length}</div><div class="stat-label">Fire Equip</div></div>
+      <div class="stat-card orange"><div class="stat-value">${pt.length}</div><div class="stat-label">Tools</div></div>
+      <div class="stat-card blue"><div class="stat-value">${tr.length}</div><div class="stat-label">Training</div></div>
+      <div class="stat-card green"><div class="stat-value">${br.length}</div><div class="stat-label">Briefings</div></div>
+      <div class="stat-card orange"><div class="stat-value">${insp.length}</div><div class="stat-label">Inspections</div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card blue"><div class="stat-value">${ea.length}</div><div class="stat-label">Emp. Attendance</div></div>
+      <div class="stat-card orange"><div class="stat-value">${sca.length}</div><div class="stat-label">SC Attendance</div></div>
+      <div class="stat-card green"><div class="stat-value">${hi.length}</div><div class="stat-label">Health Records</div></div>
+      <div class="stat-card red"><div class="stat-value">${hi.filter(function(h){return h.fitToWork==='No';}).length}</div><div class="stat-label">Unfit Workers</div></div>
+    </div>
+    <div class="alerts-section">
+      <div class="form-card"><h3>📊 Incidents by Type</h3>${Object.entries(byType).map(function(e){var t=e[0],c=e[1];return '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>'+t+'</span><strong>'+c+'</strong></div><div class="progress-bar-container"><div class="progress-bar-fill progress-orange" style="width:'+Math.round((c/Math.max(inc.length,1))*100)+'%"></div></div></div>';}).join('')||'<p>No data</p>'}</div>
+      <div class="form-card"><h3>🧯 Fire Equipment</h3>${['Serviceable','Recharge Required','Expired'].map(function(s){var c=fe.filter(function(f){return f.status===s;}).length;return '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>'+s+'</span><strong>'+c+'</strong></div><div class="progress-bar-container"><div class="progress-bar-fill '+(s==='Serviceable'?'progress-green':'progress-red')+'" style="width:'+Math.round((c/Math.max(fe.length,1))*100)+'%"></div></div></div>';}).join('')}</div>
+    </div>
+    <div class="form-card"><h3>👥 Personnel Database Summary</h3>
+      <p style="font-size:14px;margin-bottom:10px;">Total unique personnel: <strong>${getPersonnelDB().length}</strong></p>
+      <div style="display:flex;gap:15px;flex-wrap:wrap;">
+        <span class="status-badge status-safe">Employees: ${getPersonnelDB().filter(function(p){return p.type==='employee';}).length}</span>
+        <span class="status-badge status-pending">Sub-Contractors: ${getPersonnelDB().filter(function(p){return p.type==='subcontractor';}).length}</span>
+      </div>
+    </div>
+    <div class="form-card"><h3>📄 Export</h3><div class="form-actions">
+      <button class="btn btn-primary" onclick="showToast('Use browser print for PDF','info')">📄 Generate PDF</button>
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+    </div></div></div>`;
+}
+
+// ============================================
+// ⚙️ SETTINGS
+// ============================================
+function renderSettings(){
+  $('contentArea').innerHTML=`<div class="module-page active"><div class="module-header"><h2>⚙️ Admin Settings</h2></div>
+    <div class="form-card"><h3>👤 System Info</h3><div class="form-grid">
+      <div class="form-group"><label>Developer</label><input type="text" value="${CONFIG.DEVELOPER}" readonly style="background:#f8f9fa;"></div>
+      <div class="form-group"><label>Position</label><input type="text" value="${CONFIG.POSITION}" readonly style="background:#f8f9fa;"></div>
+      <div class="form-group"><label>Company</label><input type="text" value="${CONFIG.COMPANY}" readonly style="background:#f8f9fa;"></div>
+      <div class="form-group"><label>Version</label><input type="text" value="v${CONFIG.VERSION} — Toolbox Talk Photo + Auto-suggest" readonly style="background:#f8f9fa;"></div>
+    </div></div>
+
+    <div class="form-card"><h3>☁️ Google Sheets</h3><div class="form-grid">
+      <div class="form-group full-width"><label>Script URL</label><input type="text" id="settingsScriptUrl" value="${CONFIG.SCRIPT_URL}"></div>
+    </div><div class="form-actions">
+      <button class="btn btn-primary" onclick="CONFIG.SCRIPT_URL=$('settingsScriptUrl').value;localStorage.setItem('scriptUrl',CONFIG.SCRIPT_URL);showToast('URL saved!','success')">💾 Save URL</button>
+      <button class="btn btn-success" onclick="showToast('Testing...','info');submitToSheet('ConnectionTest',['Test',now(),'v${CONFIG.VERSION}'])">🔌 Test</button>
+    </div></div>
+
+    <div class="form-card"><h3>📊 LTI Tracker</h3><div class="form-grid">
+      <div class="form-group"><label>LTI-Free Days</label><input type="number" id="ltiDays" value="${localStorage.getItem('ltiFreeDays')||145}"></div>
+      <div class="form-group"><label>Last LTI Date</label><input type="date" id="lastLTI" value="${localStorage.getItem('lastLTIDate')||''}"></div>
+    </div><div class="form-actions">
+      <button class="btn btn-success" onclick="localStorage.setItem('ltiFreeDays',$('ltiDays').value);localStorage.setItem('lastLTIDate',$('lastLTI').value);showToast('Updated!','success')">💾 Update</button>
+    </div></div>
+
+    <div class="form-card"><h3>👥 Personnel Database</h3>
+      <p style="font-size:14px;margin-bottom:10px;">Total unique names in autocomplete: <strong>${getPersonnelDB().length}</strong></p>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="showPersonnelList()">👀 View All Personnel</button>
+      </div>
+      <div id="personnelListContainer" style="margin-top:15px;display:none;"></div>
+    </div>
+
+    <div class="form-card"><h3>🗄️ Data Management</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="exportAllData()">📥 Export JSON</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All</button>
+      </div>
+      <p style="margin-top:15px;font-size:12px;color:var(--text-muted);">Storage: ~${(new Blob([JSON.stringify(localStorage)]).size/1024).toFixed(1)} KB</p>
+    </div>
+
+    <div class="form-card"><h3>📱 Modules (23)</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
+      ${['Dashboard','Toolbox Talk/Briefing','Employee Attendance','SC Attendance','Incidents','HIRA','Inspections','Power Tools','Fire Equipment','Hydrant','Fire Alarm','Fire Drill','Emergency','Training','PPE','PTW','Health Info','CIDA','Legal Register','ISO Audit','Factory Ordinance','Reports','Settings'].map(function(m){return '<div style="padding:8px 12px;background:var(--body-bg);border-radius:6px;font-size:12px;">✅ '+m+'</div>';}).join('')}
+    </div></div>
+  </div>`;
+}
+
+function showPersonnelList(){
+  var container=$('personnelListContainer');
+  if(!container)return;
+  var personnel=getPersonnelDB();
+  container.style.display='block';
+  container.innerHTML='<div class="table-wrapper" style="max-height:400px;overflow-y:auto;"><table>'+
+    '<thead><tr><th>Name</th><th>Type</th><th>ID/NIC</th><th>Designation</th><th>Company</th></tr></thead>'+
+    '<tbody>'+personnel.map(function(p){return '<tr>'+
+      '<td><strong>'+p.name+'</strong></td>'+
+      '<td><span class="status-badge '+(p.type==='subcontractor'?'status-pending':'status-safe')+'">'+(p.type==='subcontractor'?'SC':'EMP')+'</span></td>'+
+      '<td>'+(p.empId||p.nic||'-')+'</td><td>'+(p.designation||p.trade||'-')+'</td>'+
+      '<td>'+(p.company||'-')+'</td>'+
+    '</tr>';}).join('')+'</tbody></table></div>';
+}
+
+function exportAllData(){
+  var d={};for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);
+  try{d[k]=JSON.parse(localStorage.getItem(k));}catch(e){d[k]=localStorage.getItem(k);}}
+  var b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='HSE_Export_'+today()+'.json';a.click();
+  showToast('Exported!','success');
+}
+
+function clearAllData(){
+  if(confirm('⚠️ Delete ALL local data?')){
+    if(confirm('Are you sure? This cannot be undone!')){
+      var auth=localStorage.getItem('hse_auth');localStorage.clear();
+      if(auth)localStorage.setItem('hse_auth',auth);showToast('Cleared!','warning');renderSettings();
+    }
+  }
+}
+
+// ============================================
+// 🚀 INITIALIZATION
+// ============================================
+document.addEventListener('DOMContentLoaded',function(){
+  var s=localStorage.getItem('scriptUrl');if(s)CONFIG.SCRIPT_URL=s;
+  checkAuth();
+  document.addEventListener('keypress',function(e){
+    if(e.key==='Enter'&&$('loginScreen').style.display!=='none')handleLogin();
+  });
+});
+</script>
+</body>
+</html>
