@@ -2,19 +2,13 @@
 // HSE MANAGEMENT SYSTEM — Google Apps Script
 // Developer: Mahesh | HSE Officer
 // Company: Hayleys Fentons Limited
-// Version: 4.0.0 (Briefing Photo + Toolbox Fix + Auto-suggest)
-// ============================================
-// CHANGELOG v4.0.0:
-// ✅ Briefing/Toolbox Talk photo upload support
-// ✅ Server-side personnel/company/project endpoints
-// ✅ Updated Briefing headers with Photo URL
-// ✅ Future-proof API architecture
+// Version: 4.0.0
 // ============================================
 
 // 📁 Drive Folder IDs
-var INCIDENT_FOLDER_ID = "1EGJgsFc8TSEbAfQlaJ1zNRjPyoahGyWK"; 
+var INCIDENT_FOLDER_ID = "1EGJgsFc8TSEbAfQlaJ1zNRjPyoahGyWK";
 var TRAINING_FOLDER_ID = "1Y8Pzufd4Yhl4X6nSyTP3Fu0MxQ9LxqPZ";
-var BRIEFING_FOLDER_ID = "1nwRLiR9rw8VF56iBgaPxefJ5x93DFpR7"; // 🆕 Briefing/Toolbox photos
+var BRIEFING_FOLDER_ID = "1nwRLiR9rw8VF56iBgaPxefJ5x93DFpR7";
 
 // 📧 Email Settings
 var EMAIL_ADDRESS = "dayanmahesh123@gmail.com";
@@ -45,7 +39,6 @@ function doPost(e) {
       }
     }
 
-    // 📸 Photo save helper
     function savePhotoToDrive(photoData, fileNamePrefix, targetFolderId) {
       if (photoData && photoData.toString().indexOf('data:image') !== -1) {
         try {
@@ -53,8 +46,8 @@ function doPost(e) {
           var contentType = photoData.split(';')[0].split(':')[1];
           var base64String = photoData.split(',')[1];
           var blob = Utilities.newBlob(
-            Utilities.base64Decode(base64String), 
-            contentType, 
+            Utilities.base64Decode(base64String),
+            contentType,
             fileNamePrefix + "_" + new Date().getTime() + ".jpg"
           );
           var file = folder.createFile(blob);
@@ -68,7 +61,6 @@ function doPost(e) {
       return "";
     }
 
-    // 🚨 INCIDENTS
     if (sheetName === 'Incidents') {
       var photoUrl = savePhotoToDrive(values[14], values[0], INCIDENT_FOLDER_ID);
       values[14] = photoUrl;
@@ -77,31 +69,26 @@ function doPost(e) {
         sendIncidentEmail(values, photoUrl);
       }
     }
-    // 📚 TRAINING
     else if (sheetName === 'Training') {
       var photoUrl = savePhotoToDrive(values[10], values[0], TRAINING_FOLDER_ID);
       values[10] = photoUrl;
       sheet.appendRow(values);
     }
-    // 📢 BRIEFING — 🆕 UPDATED with Photo
     else if (sheetName === 'Briefing') {
       var photoUrl = savePhotoToDrive(values[14], values[0], BRIEFING_FOLDER_ID);
       values[14] = photoUrl;
       sheet.appendRow(values);
       Logger.log("Briefing: " + values[3] + " — " + values[9] + " attendees, Photo: " + (photoUrl ? "Yes" : "No"));
     }
-    // 📋 EMPLOYEE ATTENDANCE
     else if (sheetName === 'EmployeeAttendance') {
       sheet.appendRow(values);
     }
-    // 👷 SUB-CONTRACTOR ATTENDANCE
     else if (sheetName === 'SubContractorAttendance') {
       sheet.appendRow(values);
       if (values[10] === 'No' || values[11] === 'No') {
         sendSCAlertEmail(values, values[10], values[11]);
       }
     }
-    // 🏥 HEALTH INFO
     else if (sheetName === 'HealthInfo') {
       sheet.appendRow(values);
       if (values[23] === 'No' || values[20] === 'Expired') {
@@ -111,15 +98,14 @@ function doPost(e) {
         sendHealthRestrictionEmail(values);
       }
     }
-    // 🟢 ALL OTHER SHEETS
     else {
       sheet.appendRow(values);
     }
-    
+
     return ContentService.createTextOutput(
       JSON.stringify({"status":"success","message":"Data saved to "+sheetName,"timestamp":new Date().toISOString()})
     ).setMimeType(ContentService.MimeType.JSON);
-    
+
   } catch (error) {
     Logger.log("doPost Error: " + error.toString());
     return ContentService.createTextOutput(
@@ -129,37 +115,33 @@ function doPost(e) {
 }
 
 // ============================================
-// 📤 doGet — Dashboard + 🆕 Data Endpoints
+// 📤 doGet — Dashboard + Data Endpoints
 // ============================================
 function doGet(e) {
   try {
     var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : '';
-    
-    // 🆕 Server-side autocomplete endpoints
+
     if (action === 'getPersonnel') return getPersonnelData();
     if (action === 'getCompanies') return getCompanyData();
     if (action === 'getProjects') return getProjectData();
-    
-    // Default: Dashboard data
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var response = {};
-    
-    // 1️⃣ Last Incident Date
+
     var incSheet = ss.getSheetByName("Incidents");
     if (incSheet && incSheet.getLastRow() > 1) {
       response.lastDate = incSheet.getRange(incSheet.getLastRow(), 2).getValue();
     } else {
       response.lastDate = new Date().toISOString();
     }
-    
-    // 2️⃣ Employee Attendance
+
     var eaSheet = ss.getSheetByName("EmployeeAttendance");
     if (eaSheet && eaSheet.getLastRow() > 1) {
       var todayStr = Utilities.formatDate(new Date(), "Asia/Colombo", "yyyy-MM-dd");
       var eaData = eaSheet.getDataRange().getValues();
       var empPresent=0, empAbsent=0, empTotalHours=0;
       for (var i=1; i<eaData.length; i++) {
-        var rowDate = eaData[i][1] instanceof Date ? 
+        var rowDate = eaData[i][1] instanceof Date ?
           Utilities.formatDate(eaData[i][1], "Asia/Colombo", "yyyy-MM-dd") : eaData[i][1].toString();
         if (rowDate === todayStr) {
           if (eaData[i][12]==="Present"||eaData[i][12]==="Late") empPresent++;
@@ -171,8 +153,7 @@ function doGet(e) {
       response.employeeAbsent = empAbsent;
       response.employeeTotalHours = empTotalHours;
     }
-    
-    // 3️⃣ SC Attendance
+
     var scSheet = ss.getSheetByName("SubContractorAttendance");
     if (scSheet && scSheet.getLastRow() > 1) {
       var todayStr2 = Utilities.formatDate(new Date(), "Asia/Colombo", "yyyy-MM-dd");
@@ -191,8 +172,7 @@ function doGet(e) {
       response.scNoInduction = scNoInduction;
       response.scNoPPE = scNoPPE;
     }
-    
-    // 4️⃣ Health Info
+
     var hiSheet = ss.getSheetByName("HealthInfo");
     if (hiSheet && hiSheet.getLastRow() > 1) {
       var hiData = hiSheet.getDataRange().getValues();
@@ -205,8 +185,7 @@ function doGet(e) {
       response.unfitWorkers = unfitCount;
       response.totalHealthRecords = hiData.length - 1;
     }
-    
-    // 5️⃣ Briefing Count
+
     var brSheet = ss.getSheetByName("Briefing");
     if (brSheet && brSheet.getLastRow() > 1) {
       var todayStr3 = Utilities.formatDate(new Date(), "Asia/Colombo", "yyyy-MM-dd");
@@ -223,11 +202,11 @@ function doGet(e) {
       response.todayBriefings = brCount;
       response.todayBriefingAttendees = brTotalAttendees;
     }
-    
+
     return ContentService.createTextOutput(
       JSON.stringify(response)
     ).setMimeType(ContentService.MimeType.JSON);
-    
+
   } catch(ex) {
     Logger.log("doGet Error: " + ex.toString());
     return ContentService.createTextOutput(
@@ -237,13 +216,13 @@ function doGet(e) {
 }
 
 // ============================================
-// 🆕 SERVER-SIDE DATA FUNCTIONS (Future-proof)
+// 🆕 SERVER-SIDE DATA FUNCTIONS
 // ============================================
 function getPersonnelData() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var personnel = [];
   var seen = {};
-  
+
   var eaSheet = ss.getSheetByName("EmployeeAttendance");
   if (eaSheet && eaSheet.getLastRow() > 1) {
     var eaData = eaSheet.getDataRange().getValues();
@@ -257,7 +236,7 @@ function getPersonnelData() {
       }
     }
   }
-  
+
   var scSheet = ss.getSheetByName("SubContractorAttendance");
   if (scSheet && scSheet.getLastRow() > 1) {
     var scData = scSheet.getDataRange().getValues();
@@ -270,7 +249,7 @@ function getPersonnelData() {
       }
     }
   }
-  
+
   return ContentService.createTextOutput(
     JSON.stringify({status:'success',data:personnel,count:personnel.length})
   ).setMimeType(ContentService.MimeType.JSON);
@@ -279,7 +258,7 @@ function getPersonnelData() {
 function getCompanyData() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var companies = {};
-  
+
   var scSheet = ss.getSheetByName("SubContractorAttendance");
   if (scSheet && scSheet.getLastRow() > 1) {
     var scData = scSheet.getDataRange().getValues();
@@ -288,7 +267,7 @@ function getCompanyData() {
       if (co) companies[co] = true;
     }
   }
-  
+
   var cidaSheet = ss.getSheetByName("CIDA");
   if (cidaSheet && cidaSheet.getLastRow() > 1) {
     var cidaData = cidaSheet.getDataRange().getValues();
@@ -297,7 +276,7 @@ function getCompanyData() {
       if (cn) companies[cn] = true;
     }
   }
-  
+
   return ContentService.createTextOutput(
     JSON.stringify({status:'success',data:Object.keys(companies)})
   ).setMimeType(ContentService.MimeType.JSON);
@@ -306,7 +285,7 @@ function getCompanyData() {
 function getProjectData() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var projects = {};
-  
+
   ['EmployeeAttendance','SubContractorAttendance'].forEach(function(sn) {
     var sheet = ss.getSheetByName(sn);
     if (sheet && sheet.getLastRow() > 1) {
@@ -318,7 +297,7 @@ function getProjectData() {
       }
     }
   });
-  
+
   return ContentService.createTextOutput(
     JSON.stringify({status:'success',data:Object.keys(projects)})
   ).setMimeType(ContentService.MimeType.JSON);
@@ -330,7 +309,7 @@ function getProjectData() {
 function sendIncidentEmail(values, photoUrl) {
   try {
     var severity = values[4];
-    var emailHtml = 
+    var emailHtml =
       "<div style='font-family:Arial;max-width:600px;margin:0 auto;'>" +
       "<div style='background:#e63946;color:white;padding:20px;border-radius:8px 8px 0 0;'>" +
       "<h2 style='margin:0;'>🚨 " + severity + " Incident Alert</h2>" +
@@ -361,7 +340,7 @@ function sendSCAlertEmail(values, induction, ppe) {
     var items = [];
     if (induction==='No') items.push("❌ Safety Induction NOT completed");
     if (ppe==='No') items.push("❌ PPE NOT compliant");
-    var emailHtml = 
+    var emailHtml =
       "<div style='font-family:Arial;max-width:600px;margin:0 auto;'>" +
       "<div style='background:#f77f00;color:white;padding:20px;border-radius:8px 8px 0 0;'>" +
       "<h2 style='margin:0;'>⚠️ Sub-Contractor Safety Alert</h2></div>" +
@@ -382,7 +361,7 @@ function sendSCAlertEmail(values, induction, ppe) {
 
 function sendHealthAlertEmail(values) {
   try {
-    var emailHtml = 
+    var emailHtml =
       "<div style='font-family:Arial;max-width:600px;margin:0 auto;'>" +
       "<div style='background:#e63946;color:white;padding:20px;border-radius:8px 8px 0 0;'>" +
       "<h2 style='margin:0;'>🏥 Health Alert</h2></div>" +
@@ -403,7 +382,7 @@ function sendHealthAlertEmail(values) {
 
 function sendHealthRestrictionEmail(values) {
   try {
-    var emailHtml = 
+    var emailHtml =
       "<div style='font-family:Arial;max-width:600px;margin:0 auto;'>" +
       "<div style='background:#f77f00;color:white;padding:20px;border-radius:8px 8px 0 0;'>" +
       "<h2 style='margin:0;'>⚠️ Work Restriction Required</h2></div>" +
@@ -422,7 +401,7 @@ function sendHealthRestrictionEmail(values) {
 }
 
 // ============================================
-// 📋 HEADERS — 🆕 Briefing updated with Photo URL
+// 📋 HEADERS
 // ============================================
 function getHeadersForSheet(sheetName) {
   var headersMap = {
@@ -443,7 +422,6 @@ function getHeadersForSheet(sheetName) {
     'EmployeeAttendance': ['ID','Date','Name','Employee ID','NIC','Designation','Department','Project/Site','Check-In','Check-Out','Work Hours','Overtime','Status','Remarks','Timestamp'],
     'SubContractorAttendance': ['ID','Date','Company','Worker Name','NIC','Trade','Project/Site','Check-In','Check-Out','Work Hours','Safety Induction','PPE Compliance','Supervisor','Status','Remarks','Timestamp'],
     'HealthInfo': ['ID','Person Type','Name','ID/NIC','Company','Designation','DOB','Age','Gender','Blood Group','Phone','Emergency Name','Emergency Relation','Emergency Phone','Emergency Address','Medical Conditions','Allergies','Medications','Previous Injuries','Last Medical Date','Fitness Cert Status','Cert Expiry','Doctor Name','Fit to Work','Restrictions','Restriction Details','Record Date','Remarks','Timestamp'],
-    // 🆕 UPDATED: Added Photo URL column
     'Briefing': ['ID','Date','Time','Topic','Type','Conductor','Location','Duration (min)','Attendees','Attendee Count','Key Points','Actions','Status','Timestamp','Photo URL'],
     'ConnectionTest': ['Test Data','Timestamp','System Version']
   };
@@ -463,7 +441,7 @@ function setupAllSheets() {
     'EmployeeAttendance','SubContractorAttendance','HealthInfo',
     'Briefing'
   ];
-  
+
   var created=0, existed=0;
   sheetNames.forEach(function(name) {
     var sheet = ss.getSheetByName(name);
@@ -480,10 +458,518 @@ function setupAllSheets() {
       created++;
     } else { existed++; }
   });
-  
+
   try {
     SpreadsheetApp.getUi().alert('✅ Setup Complete!\nCreated: '+created+'\nExisted: '+existed+'\nTotal: '+sheetNames.length);
   } catch(e) {
     Logger.log('Setup: Created '+created+', Existed '+existed);
   }
+}
+
+// ============================================
+// 🎨 AUTO FORMAT ALL SHEETS
+// ============================================
+function formatAllSheets() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = ss.getSheets();
+
+  sheets.forEach(function(sheet) {
+    var name = sheet.getName();
+    var lastCol = sheet.getLastColumn();
+    var lastRow = sheet.getLastRow();
+
+    if (lastCol === 0) return;
+
+    var headerRange = sheet.getRange(1, 1, 1, lastCol);
+    headerRange.setBackground('#0d1b2a')
+               .setFontColor('#ffffff')
+               .setFontWeight('bold')
+               .setFontSize(10)
+               .setFontFamily('Arial')
+               .setHorizontalAlignment('center')
+               .setVerticalAlignment('middle')
+               .setWrap(true);
+    sheet.setRowHeight(1, 40);
+    sheet.setFrozenRows(1);
+
+    if (lastRow > 1) {
+      var dataRange = sheet.getRange(2, 1, lastRow - 1, lastCol);
+      dataRange.setFontSize(10)
+               .setFontFamily('Arial')
+               .setVerticalAlignment('middle')
+               .setWrap(true);
+
+      for (var i = 2; i <= lastRow; i++) {
+        var rowRange = sheet.getRange(i, 1, 1, lastCol);
+        if (i % 2 === 0) {
+          rowRange.setBackground('#f8f9fa');
+        } else {
+          rowRange.setBackground('#ffffff');
+        }
+      }
+    }
+
+    if (lastRow > 0) {
+      var allRange = sheet.getRange(1, 1, lastRow, lastCol);
+      allRange.setBorder(true, true, true, true, true, true, '#dee2e6', SpreadsheetApp.BorderStyle.SOLID);
+    }
+
+    var columnWidths = {
+      'Incidents': [80,100,80,140,90,120,120,120,120,250,200,200,100,150,200],
+      'Training': [80,100,180,140,120,80,80,250,90,150,200],
+      'Briefing': [80,100,80,180,120,120,120,80,200,80,250,200,90,150,200],
+      'EmployeeAttendance': [80,100,150,100,120,120,100,120,80,80,80,60,80,200,150],
+      'SubContractorAttendance': [80,100,140,140,120,100,120,80,80,80,100,100,120,80,200,150],
+      'HealthInfo': [80,100,150,120,140,120,100,50,70,70,100,140,100,100,200,180,150,150,200,100,100,100,120,80,120,200,100,200,150],
+      'HIRA': [80,150,120,250,50,50,80,250,50,50,80,100,100,150],
+      'Inspections': [80,100,180,120,120,250,200,200,80,100,80,150],
+      'PowerTools': [80,140,70,80,80,60,60,100,100,100,200,70,150],
+      'FireEquipment': [80,120,80,140,100,100,100,100,100,80,80,100,100,200,150],
+      'FireHydrants': [80,100,120,100,80,80,100,100,80,80,80,100,100,200,150],
+      'FireAlarms': [80,120,120,100,80,100,100,80,100,100,100,200,150],
+      'FireDrills': [80,100,80,120,120,80,80,80,100,100,100,80,100,250,200,150],
+      'EmergencyContacts': [80,150,150,120,120,100,80,150],
+      'PPERecords': [80,100,150,100,160,80,80,60,200,150],
+      'PermitToWork': [80,100,100,120,120,120,140,250,250,120,80,150],
+      'CIDA': [80,120,180,60,100,120,120,120,140,80,80,80,100,200,150],
+      'LegalRegister': [80,150,100,100,250,100,100,250,150]
+    };
+
+    if (columnWidths[name]) {
+      columnWidths[name].forEach(function(w, idx) {
+        if (idx < lastCol) sheet.setColumnWidth(idx + 1, w);
+      });
+    } else {
+      for (var c = 1; c <= lastCol; c++) {
+        sheet.setColumnWidth(c, 120);
+      }
+      if (lastCol >= 1) sheet.setColumnWidth(1, 80);
+    }
+
+    if (lastRow > 1) {
+      sheet.getRange(2, 1, lastRow - 1, 1)
+           .setFontWeight('bold')
+           .setHorizontalAlignment('center');
+    }
+
+    var dateColumns = {
+      'Incidents': [2], 'Training': [2], 'Briefing': [2],
+      'EmployeeAttendance': [2], 'SubContractorAttendance': [2],
+      'HealthInfo': [7, 20, 22, 27], 'HIRA': [13],
+      'Inspections': [2, 10], 'PowerTools': [8, 9],
+      'FireEquipment': [5, 6, 7, 8], 'FireHydrants': [4],
+      'FireAlarms': [4, 9], 'FireDrills': [2],
+      'PPERecords': [2], 'PermitToWork': [2, 3],
+      'CIDA': [5], 'LegalRegister': [7]
+    };
+
+    if (dateColumns[name] && lastRow > 1) {
+      dateColumns[name].forEach(function(col) {
+        if (col <= lastCol) {
+          sheet.getRange(2, col, lastRow - 1, 1)
+               .setHorizontalAlignment('center')
+               .setNumberFormat('yyyy-mm-dd');
+        }
+      });
+    }
+
+    Logger.log('✅ Formatted: ' + name);
+  });
+
+  var tabColors = {
+    'Incidents': '#e63946', 'HIRA': '#f77f00', 'Inspections': '#457b9d',
+    'PowerTools': '#6c757d', 'FireEquipment': '#e63946', 'FireHydrants': '#e76f51',
+    'FireAlarms': '#f4a261', 'FireDrills': '#e63946', 'EmergencyContacts': '#e63946',
+    'Training': '#2a9d8f', 'Briefing': '#457b9d', 'PPERecords': '#2a9d8f',
+    'PermitToWork': '#f77f00', 'CIDA': '#2a9d8f', 'LegalRegister': '#457b9d',
+    'EmployeeAttendance': '#1b263b', 'SubContractorAttendance': '#f77f00',
+    'HealthInfo': '#e63946'
+  };
+
+  Object.keys(tabColors).forEach(function(sn) {
+    var s = ss.getSheetByName(sn);
+    if (s) s.setTabColor(tabColors[sn]);
+  });
+
+  SpreadsheetApp.getUi().alert(
+    '🎨 Formatting Complete!\n\n' +
+    '✅ Headers styled\n✅ Zebra stripes added\n✅ Borders added\n' +
+    '✅ Column widths set\n✅ Date formats applied\n✅ Tab colors set\n\n' +
+    'Now run: addConditionalFormatting()'
+  );
+}
+
+// ============================================
+// 🎨 CONDITIONAL FORMATTING
+// ============================================
+function addConditionalFormatting() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  var incSheet = ss.getSheetByName('Incidents');
+  if (incSheet) {
+    clearConditionalFormatting(incSheet);
+    var lastRow = Math.max(incSheet.getLastRow(), 100);
+    addStatusRule(incSheet, 'E2:E' + lastRow, 'Critical', '#f8d7da', '#721c24');
+    addStatusRule(incSheet, 'E2:E' + lastRow, 'High', '#fff3cd', '#856404');
+    addStatusRule(incSheet, 'E2:E' + lastRow, 'Medium', '#fff3cd', '#856404');
+    addStatusRule(incSheet, 'E2:E' + lastRow, 'Low', '#d4edda', '#155724');
+    addStatusRule(incSheet, 'M2:M' + lastRow, 'Open', '#f8d7da', '#721c24');
+    addStatusRule(incSheet, 'M2:M' + lastRow, 'Closed', '#d4edda', '#155724');
+    addStatusRule(incSheet, 'M2:M' + lastRow, 'Under Investigation', '#fff3cd', '#856404');
+  }
+
+  var ptSheet = ss.getSheetByName('PowerTools');
+  if (ptSheet) {
+    clearConditionalFormatting(ptSheet);
+    var lr = Math.max(ptSheet.getLastRow(), 100);
+    addStatusRule(ptSheet, 'L2:L' + lr, 'SAFE', '#d4edda', '#155724');
+    addStatusRule(ptSheet, 'L2:L' + lr, 'UNSAFE', '#f8d7da', '#721c24');
+  }
+
+  var feSheet = ss.getSheetByName('FireEquipment');
+  if (feSheet) {
+    clearConditionalFormatting(feSheet);
+    var lr2 = Math.max(feSheet.getLastRow(), 100);
+    addStatusRule(feSheet, 'L2:L' + lr2, 'Serviceable', '#d4edda', '#155724');
+    addStatusRule(feSheet, 'L2:L' + lr2, 'Expired', '#f8d7da', '#721c24');
+    addStatusRule(feSheet, 'L2:L' + lr2, 'Recharge Required', '#fff3cd', '#856404');
+  }
+
+  var eaSheet = ss.getSheetByName('EmployeeAttendance');
+  if (eaSheet) {
+    clearConditionalFormatting(eaSheet);
+    var lr3 = Math.max(eaSheet.getLastRow(), 100);
+    addStatusRule(eaSheet, 'M2:M' + lr3, 'Present', '#d4edda', '#155724');
+    addStatusRule(eaSheet, 'M2:M' + lr3, 'Absent', '#f8d7da', '#721c24');
+    addStatusRule(eaSheet, 'M2:M' + lr3, 'Late', '#fff3cd', '#856404');
+    addStatusRule(eaSheet, 'M2:M' + lr3, 'Leave', '#cce5ff', '#004085');
+    addStatusRule(eaSheet, 'M2:M' + lr3, 'Sick Leave', '#fff3cd', '#856404');
+  }
+
+  var scSheet = ss.getSheetByName('SubContractorAttendance');
+  if (scSheet) {
+    clearConditionalFormatting(scSheet);
+    var lr4 = Math.max(scSheet.getLastRow(), 100);
+    addStatusRule(scSheet, 'K2:K' + lr4, 'Yes', '#d4edda', '#155724');
+    addStatusRule(scSheet, 'K2:K' + lr4, 'No', '#f8d7da', '#721c24');
+    addStatusRule(scSheet, 'L2:L' + lr4, 'Yes', '#d4edda', '#155724');
+    addStatusRule(scSheet, 'L2:L' + lr4, 'No', '#f8d7da', '#721c24');
+    addStatusRule(scSheet, 'L2:L' + lr4, 'Partial', '#fff3cd', '#856404');
+    addStatusRule(scSheet, 'N2:N' + lr4, 'Present', '#d4edda', '#155724');
+    addStatusRule(scSheet, 'N2:N' + lr4, 'Absent', '#f8d7da', '#721c24');
+  }
+
+  var hiSheet = ss.getSheetByName('HealthInfo');
+  if (hiSheet) {
+    clearConditionalFormatting(hiSheet);
+    var lr5 = Math.max(hiSheet.getLastRow(), 100);
+    addStatusRule(hiSheet, 'U2:U' + lr5, 'Valid', '#d4edda', '#155724');
+    addStatusRule(hiSheet, 'U2:U' + lr5, 'Expired', '#f8d7da', '#721c24');
+    addStatusRule(hiSheet, 'U2:U' + lr5, 'Pending', '#fff3cd', '#856404');
+    addStatusRule(hiSheet, 'X2:X' + lr5, 'Yes', '#d4edda', '#155724');
+    addStatusRule(hiSheet, 'X2:X' + lr5, 'No', '#f8d7da', '#721c24');
+    addStatusRule(hiSheet, 'X2:X' + lr5, 'Conditional', '#fff3cd', '#856404');
+  }
+
+  var brSheet = ss.getSheetByName('Briefing');
+  if (brSheet) {
+    clearConditionalFormatting(brSheet);
+    var lr6 = Math.max(brSheet.getLastRow(), 100);
+    addStatusRule(brSheet, 'M2:M' + lr6, 'Completed', '#d4edda', '#155724');
+    addStatusRule(brSheet, 'M2:M' + lr6, 'Scheduled', '#cce5ff', '#004085');
+    addStatusRule(brSheet, 'M2:M' + lr6, 'Cancelled', '#f8d7da', '#721c24');
+  }
+
+  var trSheet = ss.getSheetByName('Training');
+  if (trSheet) {
+    clearConditionalFormatting(trSheet);
+    var lr7 = Math.max(trSheet.getLastRow(), 100);
+    addStatusRule(trSheet, 'I2:I' + lr7, 'Completed', '#d4edda', '#155724');
+    addStatusRule(trSheet, 'I2:I' + lr7, 'Scheduled', '#cce5ff', '#004085');
+    addStatusRule(trSheet, 'I2:I' + lr7, 'Cancelled', '#f8d7da', '#721c24');
+  }
+
+  var insSheet = ss.getSheetByName('Inspections');
+  if (insSheet) {
+    clearConditionalFormatting(insSheet);
+    var lr8 = Math.max(insSheet.getLastRow(), 100);
+    addStatusRule(insSheet, 'I2:I' + lr8, 'Critical', '#f8d7da', '#721c24');
+    addStatusRule(insSheet, 'I2:I' + lr8, 'High', '#fff3cd', '#856404');
+    addStatusRule(insSheet, 'K2:K' + lr8, 'Open', '#f8d7da', '#721c24');
+    addStatusRule(insSheet, 'K2:K' + lr8, 'Closed', '#d4edda', '#155724');
+  }
+
+  var ptwSheet = ss.getSheetByName('PermitToWork');
+  if (ptwSheet) {
+    clearConditionalFormatting(ptwSheet);
+    var lr9 = Math.max(ptwSheet.getLastRow(), 100);
+    addStatusRule(ptwSheet, 'K2:K' + lr9, 'Active', '#fff3cd', '#856404');
+    addStatusRule(ptwSheet, 'K2:K' + lr9, 'Completed', '#d4edda', '#155724');
+    addStatusRule(ptwSheet, 'K2:K' + lr9, 'Cancelled', '#f8d7da', '#721c24');
+    addStatusRule(ptwSheet, 'K2:K' + lr9, 'Suspended', '#f8d7da', '#721c24');
+  }
+
+  var cidaSheet = ss.getSheetByName('CIDA');
+  if (cidaSheet) {
+    clearConditionalFormatting(cidaSheet);
+    var lr10 = Math.max(cidaSheet.getLastRow(), 100);
+    addStatusRule(cidaSheet, 'M2:M' + lr10, 'Compliant', '#d4edda', '#155724');
+    addStatusRule(cidaSheet, 'M2:M' + lr10, 'Non-Compliant', '#f8d7da', '#721c24');
+    addStatusRule(cidaSheet, 'M2:M' + lr10, 'Partially Compliant', '#fff3cd', '#856404');
+  }
+
+  var legSheet = ss.getSheetByName('LegalRegister');
+  if (legSheet) {
+    clearConditionalFormatting(legSheet);
+    var lr11 = Math.max(legSheet.getLastRow(), 100);
+    addStatusRule(legSheet, 'F2:F' + lr11, 'Compliant', '#d4edda', '#155724');
+    addStatusRule(legSheet, 'F2:F' + lr11, 'Non-Compliant', '#f8d7da', '#721c24');
+    addStatusRule(legSheet, 'F2:F' + lr11, 'Partially Compliant', '#fff3cd', '#856404');
+  }
+
+  SpreadsheetApp.getUi().alert(
+    '🎨 Conditional Formatting Complete!\n\n' +
+    '✅ All status columns colored\n\n' +
+    'Now run: addDataValidation()'
+  );
+}
+
+function addStatusRule(sheet, range, value, bgColor, fontColor) {
+  var rule = SpreadsheetApp.newConditionalFormatRule()
+    .whenTextEqualTo(value)
+    .setBackground(bgColor)
+    .setFontColor(fontColor)
+    .setBold(true)
+    .setRanges([sheet.getRange(range)])
+    .build();
+  var rules = sheet.getConditionalFormatRules();
+  rules.push(rule);
+  sheet.setConditionalFormatRules(rules);
+}
+
+function clearConditionalFormatting(sheet) {
+  sheet.setConditionalFormatRules([]);
+}
+
+// ============================================
+// 📋 DATA VALIDATION
+// ============================================
+function addDataValidation() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  var incSheet = ss.getSheetByName('Incidents');
+  if (incSheet) {
+    var lr = Math.max(incSheet.getLastRow(), 100);
+    setDropdown(incSheet, 'E2:E' + lr, ['Low','Medium','High','Critical']);
+    setDropdown(incSheet, 'M2:M' + lr, ['Open','Under Investigation','Corrective Action Pending','Closed']);
+  }
+
+  var ptSheet = ss.getSheetByName('PowerTools');
+  if (ptSheet) {
+    var lr2 = Math.max(ptSheet.getLastRow(), 100);
+    setDropdown(ptSheet, 'D2:D' + lr2, ['Good','Fair','Damaged','Missing']);
+    setDropdown(ptSheet, 'E2:E' + lr2, ['Good','Fair','Damaged','Exposed Wires']);
+    setDropdown(ptSheet, 'F2:F' + lr2, ['Yes','No']);
+    setDropdown(ptSheet, 'L2:L' + lr2, ['SAFE','UNSAFE']);
+  }
+
+  var feSheet = ss.getSheetByName('FireEquipment');
+  if (feSheet) {
+    var lr3 = Math.max(feSheet.getLastRow(), 100);
+    setDropdown(feSheet, 'L2:L' + lr3, ['Serviceable','Recharge Required','Expired','Out of Service']);
+  }
+
+  var eaSheet = ss.getSheetByName('EmployeeAttendance');
+  if (eaSheet) {
+    var lr4 = Math.max(eaSheet.getLastRow(), 100);
+    setDropdown(eaSheet, 'M2:M' + lr4, ['Present','Absent','Half Day','Late','Leave','Sick Leave','Holiday']);
+  }
+
+  var scSheet = ss.getSheetByName('SubContractorAttendance');
+  if (scSheet) {
+    var lr5 = Math.max(scSheet.getLastRow(), 100);
+    setDropdown(scSheet, 'K2:K' + lr5, ['Yes','No','Pending']);
+    setDropdown(scSheet, 'L2:L' + lr5, ['Yes','No','Partial']);
+    setDropdown(scSheet, 'N2:N' + lr5, ['Present','Absent','Half Day']);
+  }
+
+  var hiSheet = ss.getSheetByName('HealthInfo');
+  if (hiSheet) {
+    var lr6 = Math.max(hiSheet.getLastRow(), 100);
+    setDropdown(hiSheet, 'B2:B' + lr6, ['Employee','Sub-Contractor','Visitor']);
+    setDropdown(hiSheet, 'I2:I' + lr6, ['Male','Female','Other']);
+    setDropdown(hiSheet, 'J2:J' + lr6, ['A+','A-','B+','B-','AB+','AB-','O+','O-','Unknown']);
+    setDropdown(hiSheet, 'U2:U' + lr6, ['Valid','Expired','Pending','Not Required']);
+    setDropdown(hiSheet, 'X2:X' + lr6, ['Yes','No','Conditional']);
+  }
+
+  var brSheet = ss.getSheetByName('Briefing');
+  if (brSheet) {
+    var lr7 = Math.max(brSheet.getLastRow(), 100);
+    setDropdown(brSheet, 'E2:E' + lr7, ['Toolbox Talk','Safety Briefing','Morning Brief','Pre-Task Brief','Weekly Safety Meeting','Emergency Brief','Method Statement Brief','Hazard Alert']);
+    setDropdown(brSheet, 'M2:M' + lr7, ['Completed','Scheduled','Cancelled']);
+  }
+
+  var trSheet = ss.getSheetByName('Training');
+  if (trSheet) {
+    var lr8 = Math.max(trSheet.getLastRow(), 100);
+    setDropdown(trSheet, 'I2:I' + lr8, ['Completed','Scheduled','Cancelled']);
+  }
+
+  var insSheet = ss.getSheetByName('Inspections');
+  if (insSheet) {
+    var lr9 = Math.max(insSheet.getLastRow(), 100);
+    setDropdown(insSheet, 'I2:I' + lr9, ['Low','Medium','High','Critical']);
+    setDropdown(insSheet, 'K2:K' + lr9, ['Open','In Progress','Closed']);
+  }
+
+  var ptwSheet = ss.getSheetByName('PermitToWork');
+  if (ptwSheet) {
+    var lr10 = Math.max(ptwSheet.getLastRow(), 100);
+    setDropdown(ptwSheet, 'D2:D' + lr10, ['Hot Work','Working at Height','Confined Space','Excavation','Electrical','Lifting','Demolition','Cold Work','Radiography']);
+    setDropdown(ptwSheet, 'K2:K' + lr10, ['Active','Completed','Cancelled','Suspended']);
+  }
+
+  var cidaSheet = ss.getSheetByName('CIDA');
+  if (cidaSheet) {
+    var lr11 = Math.max(cidaSheet.getLastRow(), 100);
+    setDropdown(cidaSheet, 'M2:M' + lr11, ['Compliant','Non-Compliant','Partially Compliant','Under Review']);
+  }
+
+  var legSheet = ss.getSheetByName('LegalRegister');
+  if (legSheet) {
+    var lr12 = Math.max(legSheet.getLastRow(), 100);
+    setDropdown(legSheet, 'F2:F' + lr12, ['Compliant','Non-Compliant','Partially Compliant','Under Review']);
+  }
+
+  SpreadsheetApp.getUi().alert(
+    '📋 Data Validation Complete!\n\n' +
+    '✅ All dropdown validations added\n\n' +
+    'Now run: createDashboardSheet()'
+  );
+}
+
+function setDropdown(sheet, range, values) {
+  var rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(values, true)
+    .setAllowInvalid(false)
+    .build();
+  sheet.getRange(range).setDataValidation(rule);
+}
+
+// ============================================
+// 📊 DASHBOARD SHEET
+// ============================================
+function createDashboardSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var dash = ss.getSheetByName('📊 Dashboard');
+  if (dash) ss.deleteSheet(dash);
+
+  dash = ss.insertSheet('📊 Dashboard', 0);
+
+  dash.getRange('A1:F1').merge()
+    .setValue('🛡️ HSE MANAGEMENT SYSTEM — DASHBOARD')
+    .setBackground('#0d1b2a').setFontColor('#ffffff')
+    .setFontSize(16).setFontWeight('bold')
+    .setHorizontalAlignment('center');
+  dash.setRowHeight(1, 50);
+
+  dash.getRange('A2:F2').merge()
+    .setValue('Hayleys Fentons Limited — ' + new Date().toLocaleDateString())
+    .setBackground('#1b263b').setFontColor('#ffffff')
+    .setFontSize(11).setHorizontalAlignment('center');
+  dash.setRowHeight(2, 30);
+
+  var sections = [
+    [4, '📊 KEY METRICS', '#457b9d'],
+    [12, '🚨 SAFETY ALERTS', '#e63946'],
+    [20, '📢 BRIEFING & TRAINING', '#2a9d8f'],
+    [26, '👥 ATTENDANCE', '#1b263b'],
+    [32, '📋 COMPLIANCE', '#f77f00']
+  ];
+
+  sections.forEach(function(s) {
+    dash.getRange(s[0], 1, 1, 6).merge()
+      .setValue(s[1]).setBackground(s[2])
+      .setFontColor('#ffffff').setFontWeight('bold')
+      .setFontSize(12).setHorizontalAlignment('center');
+    dash.setRowHeight(s[0], 35);
+  });
+
+  var metrics = [
+    [5, 'A', 'Total Incidents', "=COUNTA(Incidents!A:A)-1"],
+    [5, 'C', 'Open Incidents', '=COUNTIF(Incidents!M:M,"Open")'],
+    [5, 'E', 'Near Misses', '=COUNTIF(Incidents!D:D,"Near Miss")'],
+    [6, 'A', 'Fire Equipment', "=COUNTA(FireEquipment!A:A)-1"],
+    [6, 'C', 'Expired Equipment', '=COUNTIF(FireEquipment!L:L,"Expired")'],
+    [6, 'E', 'Unsafe Tools', '=COUNTIF(PowerTools!L:L,"UNSAFE")'],
+    [7, 'A', 'Total HIRA', "=COUNTA(HIRA!A:A)-1"],
+    [7, 'C', 'Inspections', "=COUNTA(Inspections!A:A)-1"],
+    [7, 'E', 'Emergency Contacts', "=COUNTA(EmergencyContacts!A:A)-1"],
+    [13, 'A', 'Critical Incidents', '=COUNTIF(Incidents!E:E,"Critical")'],
+    [13, 'C', 'High Incidents', '=COUNTIF(Incidents!E:E,"High")'],
+    [13, 'E', 'SC No Induction', '=COUNTIF(SubContractorAttendance!K:K,"No")'],
+    [14, 'A', 'SC No PPE', '=COUNTIF(SubContractorAttendance!L:L,"No")'],
+    [14, 'C', 'Unfit Workers', '=COUNTIF(HealthInfo!X:X,"No")'],
+    [14, 'E', 'Expired Certs', '=COUNTIF(HealthInfo!U:U,"Expired")'],
+    [21, 'A', 'Total Briefings', "=COUNTA(Briefing!A:A)-1"],
+    [21, 'C', 'Total Training', "=COUNTA(Training!A:A)-1"],
+    [21, 'E', 'Avg Attendees', '=IF(COUNTA(Briefing!A:A)>1,ROUND(AVERAGE(Briefing!J2:J),0),0)'],
+    [27, 'A', 'Employee Records', "=COUNTA(EmployeeAttendance!A:A)-1"],
+    [27, 'C', 'SC Records', "=COUNTA(SubContractorAttendance!A:A)-1"],
+    [27, 'E', 'Health Records', "=COUNTA(HealthInfo!A:A)-1"],
+    [33, 'A', 'CIDA Contractors', "=COUNTA(CIDA!A:A)-1"],
+    [33, 'C', 'Legal Requirements', "=COUNTA(LegalRegister!A:A)-1"],
+    [33, 'E', 'Compliant Legal', '=COUNTIF(LegalRegister!F:F,"Compliant")']
+  ];
+
+  metrics.forEach(function(m) {
+    var row = m[0], col = m[1], label = m[2], formula = m[3];
+    var colNum = col === 'A' ? 1 : col === 'C' ? 3 : 5;
+
+    dash.getRange(row, colNum).setValue(label)
+      .setFontWeight('bold').setFontSize(10)
+      .setBackground('#f8f9fa');
+    dash.getRange(row, colNum + 1).setFormula(formula)
+      .setFontWeight('bold').setFontSize(14)
+      .setHorizontalAlignment('center')
+      .setBackground('#ffffff');
+  });
+
+  [180, 80, 180, 80, 180, 80].forEach(function(w, i) {
+    dash.setColumnWidth(i + 1, w);
+  });
+
+  dash.getRange(1, 1, 35, 6).setBorder(true, true, true, true, true, true,
+    '#dee2e6', SpreadsheetApp.BorderStyle.SOLID);
+
+  dash.setTabColor('#0d1b2a');
+
+  SpreadsheetApp.getUi().alert(
+    '📊 Dashboard Sheet Created!\n\n' +
+    '✅ All metrics with live formulas\n' +
+    'All values auto-update!'
+  );
+}
+
+// ============================================
+// 🏆 RUN ALL AT ONCE
+// ============================================
+function makeSheetsProfessional() {
+  formatAllSheets();
+  Utilities.sleep(2000);
+  addConditionalFormatting();
+  Utilities.sleep(2000);
+  addDataValidation();
+  Utilities.sleep(2000);
+  createDashboardSheet();
+
+  SpreadsheetApp.getUi().alert(
+    '🏆 ALL DONE! Sheets are PROFESSIONAL!\n\n' +
+    '✅ Headers & formatting\n' +
+    '✅ Conditional colors\n' +
+    '✅ Data validation\n' +
+    '✅ Dashboard created\n\n' +
+    'v4.0.0 | Mahesh | Hayleys Fentons'
+  );
 }
